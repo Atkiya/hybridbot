@@ -1,0 +1,188 @@
+rules:
+  # ========================================
+  # BASIC CONVERSATION RULES
+  # ========================================
+  
+  - rule: Respond to greetings
+    steps:
+      - intent: greet
+      - action: utter_greet
+
+  - rule: Say goodbye anytime the user says goodbye
+    steps:
+      - intent: goodbye
+      - action: utter_goodbye
+
+  - rule: Respond when user affirms
+    steps:
+      - intent: affirm
+      - action: utter_affirm
+
+  - rule: Respond when user denies
+    steps:
+      - intent: deny
+      - action: utter_deny
+
+  - rule: Respond to great mood
+    steps:
+      - intent: mood_great
+      - action: utter_happy
+
+  - rule: Respond to unhappy mood
+    steps:
+      - intent: mood_unhappy
+      - action: utter_cheer_up
+
+  - rule: Respond to bot challenge
+    steps:
+      - intent: bot_challenge
+      - action: utter_iamabot
+
+  # ========================================
+  # UNIVERSITY INFORMATION RULES
+  # ========================================
+  
+  - rule: Provide university location
+    steps:
+      - intent: location
+      - action: action_get_location
+
+  - rule: Provide social media links
+    steps:
+      - intent: socials
+      - action: action_get_social_media
+
+  - rule: List all departments
+    steps:
+      - intent: departments
+      - action: action_list_departments
+
+  - rule: Provide EWU history
+    steps:
+      - intent: ewu_history
+      - action: action_get_ewu_history
+
+  - rule: Provide EWU vision statement
+    steps:
+      - intent: ewu_vision
+      - action: action_get_ewu_vision
+
+  - rule: Provide EWU mission statement
+    steps:
+      - intent: ewu_mission
+      - action: action_get_ewu_mission
+
+  # ========================================
+  # ACADEMIC INFORMATION RULES
+  # ========================================
+  
+  - rule: Show courses for a department
+    steps:
+      - intent: ask_courses
+      - action: action_get_courses
+
+
+  - rule: Show course details
+    steps:
+      - intent: ask_course_details
+      - action: action_get_course_details
+
+  - rule: List academic programs
+    steps:
+      - intent: ask_programs
+      - action: action_get_programs
+
+  - rule: Explain grading system
+    steps:
+      - intent: grading
+      - action: action_get_grading_system
+
+  # ========================================
+  # ADMINISTRATION RULES
+  # ========================================
+  
+
+  - rule: Provide tuition fee information
+    steps:
+      - intent: tuition_fee
+      - action: action_get_tuition_fees
+
+  - rule: Provide scholarship information
+    steps:
+      - intent: scholarships_waivers
+      - action: action_get_scholarships
+
+  - rule: Provide helpdesk contacts
+    steps:
+      - intent: ask_helpdesk_contact
+      - action: action_get_helpdesk_contacts
+
+  # ========================================
+  # ADMISSIONS RULES
+  # ========================================
+  
+  - rule: Provide admission deadlines
+    steps:
+      - intent: ask_admission_deadline
+      - action: action_get_admission_deadlines
+
+  - rule: Provide admission requirements
+    steps:
+      - intent: ask_admission_requirements
+      - action: action_get_admission_requirements
+
+
+  - rule: Show admission overview
+    steps:
+    - intent: admission_overview
+    - action: action_admission_application_steps
+
+  # ========================================
+  # CAMPUS LIFE RULES
+  # ========================================
+
+
+  - rule: Provide conduct rules information
+    steps:
+      - intent: general_conduct_rules
+      - action: action_get_conduct_rules
+
+  - rule: List clubs and societies
+    steps:
+      - intent: clubs_societies
+      - action: action_get_clubs_societies
+
+  # ========================================
+  # CAREER & ALUMNI RULES
+  # ========================================
+  
+  - rule: Provide alumni information
+    steps:
+      - intent: alumni
+      - action: action_get_alumni_info
+
+
+  # ========================================
+  # FALLBACK & ERROR HANDLING
+  # ========================================
+  
+  - rule: Trigger RAG for NLU fallback
+    steps:
+      - intent: nlu_fallback
+      - action: action_default_fallback
+
+#extras
+  - rule: Provide EWU program credits and duration
+    steps:
+      - intent: ask_program_details
+      - action: action_get_program_details
+   
+  - rule: Provide EWU campus facilities
+    steps:
+      - intent: ask_facilities
+      - action: action_get_facilities
+   
+  - rule: Provide EWU events
+    steps:
+      - intent: ask_events
+      - action: action_get_event_details

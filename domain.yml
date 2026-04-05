@@ -1,0 +1,154 @@
+version: '3.1'
+intents:
+  - greet
+  - goodbye
+  - affirm
+  - deny
+  - mood_great
+  - mood_unhappy
+  - bot_challenge
+  - ask_courses
+  - ask_credits
+  - ask_course_details
+  - location
+  - socials
+  - departments
+  - ewu_history
+  - ewu_vision
+  - ewu_mission
+  - ask_programs
+  - tuition_fee
+  - ask_admission_deadline
+  - ask_admission_requirements
+  - ask_facilities
+  - scholarships_waivers
+  - general_conduct_rules
+  - alumni
+  - research_opportunities
+  - internship_opportunities
+  - grading
+  - clubs_societies
+  - ask_helpdesk_contact
+  - admission_overview
+  - ask_program_details
+  - ask_events
+
+
+
+actions:
+  - action_get_social_media
+  - action_list_departments
+  - action_get_location
+  - action_get_ewu_history
+  - action_get_ewu_vision
+  - action_get_ewu_mission
+   
+   
+  - action_get_courses
+  - action_get_credit_requirements
+  - action_get_course_details
+  - action_get_programs
+  - action_get_grading_system
+   
+  - action_get_admin_staff
+  - action_get_tuition_fees
+  - action_get_scholarships
+  - action_get_helpdesk_contacts
+   
+  - action_get_admission_deadlines
+  - action_get_admission_requirements
+  - action_admission_application_steps
+   
+  - action_get_facilities
+  - action_get_conduct_rules
+  - action_get_clubs_societies
+ 
+  - action_get_alumni_info
+  - action_get_research_opportunities
+  - action_get_internship_opportunities
+   
+  - action_default_fallback  
+
+  - action_get_event_details
+  - action_get_program_details
+
+
+
+entities:
+  - department
+  - course_code
+  - program_level
+  - admin_role
+  - fee_level
+  - deadline_level
+  - deadline_type
+  - req_level
+  - req_type
+  - facility
+  - club_name
+  - faculty
+  - category
+  - activity
+  - organization
+  - dept
+  - office
+  - purpose
+  - rule_type
+  - conduct_requirement
+  - university_name
+  - person_type
+  - organization_type
+  - requirement_type
+  - user_language
+
+slots:
+  user_language:
+    type: text
+    influence_conversation: false
+    mappings:
+      - type: from_entity
+        entity: user_language
+        
+  department:
+    type: text
+    influence_conversation: false
+    mappings:
+      - type: from_entity
+        entity: department
+
+  fee_level:
+    type: text
+    influence_conversation: false
+    mappings:
+      - type: from_entity
+        entity: fee_level
+
+
+responses:
+  utter_greet:
+  - text: Hey! How are you?
+  utter_cheer_up:
+  - text: 'Here is something to cheer you up:'
+    image: https://i.pinimg.com/736x/dc/c8/83/dcc8835ee2e73cfde9750a19f59a33ea.jpg
+  utter_did_that_help:
+  - text: Did that help you?
+  utter_happy:
+  - text: Great, carry on!
+  utter_goodbye:
+  - text: Bye
+  utter_great:
+  - text: That's great! How else can I help you?
+  utter_sorry:
+  - text: No problem. Is there anything else I can help you with?
+  utter_affirm:
+  - text: I understand. How can I assist you further?
+  utter_deny:
+  - text: Alright. Let me know if you have any other questions.
+  utter_iamabot:
+  - text: I’m an automated assistant built with Rasa. I provide up-to-date guidance
+      on East West University admissions, including program details, eligibility criteria,
+      application steps, required documents, deadlines, and frequently asked questions.
+  
+session_config:
+  session_expiration_time_in_minutes: 60
+  carry_over_slots_to_new_session: true

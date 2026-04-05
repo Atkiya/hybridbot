@@ -1,0 +1,1445 @@
+version: "3.1"
+
+nlu:
+  # ========================================
+  # BASIC INTENTS
+  # ========================================
+  
+  - intent: greet
+    examples: |
+      - hey
+      - hello
+      - hi
+      - hello there
+      - good morning
+      - good evening
+      - moin
+      - hey there
+      - lets go
+      - hey dude
+      - good afternoon
+      - yo
+      - hi there
+      - howdy
+      - greetings
+      - whats up
+      - sup
+      - welcome
+      - bonjour
+      - namaste
+      - howdy partner
+      - good day
+      - good to see you
+      - nice to meet you
+      - salaam
+      - assalamualaikum
+      - আসসালামুয়ালাইকুম
+      - হ্যালো
+      - হ্যালো, কেমন আছেন?
+      - হ্যালো বট
+      - শুভ সকাল
+      - শুভ বিকেল
+      - শুভ রাত্রি
+      - নমস্কার
+      - কেমন আছেন
+      - কি খবর
+      - হাই
+      - সালাম
+
+
+  - intent: goodbye
+    examples: |
+      - cu
+      - good by
+      - cee you later
+      - good night
+      - bye
+      - goodbye
+      - have a nice day
+      - see you around
+      - bye bye
+      - see you later
+      - tata
+      - take care
+      - catch you later
+      - gotta go
+      - see ya
+      - goodbye for now
+      - see you soon
+      - au revoir
+      - signing off
+      - until next time
+      - peace
+      - farewell
+      - বিদায়
+      - আল্লাহ হাফেজ
+      - দেখা হবে
+      - ধন্যবাদ, বিদায়
+      - আবার কথা হবে
+      - ভালো থাকবেন
+      - টাটা
+      - ঠিক আছে বিদায়
+      - allah hafez
+
+
+  - intent: affirm
+    examples: |
+      - yes
+      - y
+      - indeed
+      - of course
+      - that sounds good
+      - correct
+      - absolutely
+      - sure
+      - definitely
+      - yep
+      - yeah
+      - right
+      - ok
+      - okay
+      - alright
+      - affirmative
+      - that's right
+      - totally
+      - precisely
+      - exactly
+      - perfectly
+      - I agree
+      - thumbs up
+      - হ্যাঁ
+      - অবশ্যই
+      - জি হ্যাঁ
+      - ঠিক আছে
+      - সঠিক
+      - একদম ঠিক
+      - হ্যাঁ ঠিক আছে
+      - জি
+      - ok done
+
+  - intent: deny
+    examples: |
+      - no
+      - n
+      - never
+      - I dont think so
+      - dont like that
+      - no way
+      - not really
+      - nope
+      - nah
+      - not at all
+      - negative
+      - absolutely not
+      - not interested
+      - that's wrong
+      - I disagree
+      - not correct
+      - nada
+      - zilch
+      - thumbs down
+      - না
+      - না ধন্যবাদ
+      - এটা ঠিক না
+      - আমি রাজি না
+      - একদম না
+      - কখনো না
+      - na
+
+
+  - intent: mood_great
+    examples: |
+      - perfect
+      - great
+      - amazing
+      - feeling like a king
+      - wonderful
+      - I am feeling very good
+      - I am great
+      - I am amazing
+      - super stoked
+      - extremely good
+      - so good
+      - fine
+      - happy
+      - fantastic
+      - excellent
+      - brilliant
+      - outstanding
+      - superb
+      - on top of the world
+      - couldn't be better
+      - absolutely fantastic
+      - super happy
+      - ভালো আছি
+      - খুব ভালো আছি
+      - অসাধারণ আছি
+      - দারুণ লাগছে
+      - মন ভালো আছে
+      - সুপার ভালো
+
+
+  - intent: mood_unhappy
+    examples: |
+      - sad
+      - very sad
+      - unhappy
+      - bad
+      - very bad
+      - terrible
+      - awful
+      - not good
+      - not very good
+      - extremly sad
+      - depressed
+      - down
+      - miserable
+      - horrible
+      - dreadful
+      - fed up
+      - frustrated
+      - annoyed
+      - upset
+      - devastated
+      - struggling
+      - মন খারাপ
+      - খুব খারাপ লাগছে
+      - বিষণ্ণ
+      - দুঃখিত
+      - মনটা ভালো নেই
+      - একটু খারাপ
+
+
+  - intent: bot_challenge
+    examples: |
+      - are you a bot
+      - are you a human
+      - am I talking to a bot
+      - am I talking to a human
+      - tell me you are a bot
+      - you are a bot right
+      - what are you
+      - who are you
+      - who r u
+      - are you real
+      - bot or human
+      - prove you're not a bot
+      - তুমি কি রোবট
+      - তুমি কি মানুষ
+      - তুমি কি বট
+      - আপনি কি AI
+      - তুমি কে
+      - তুমি কি বাস্তব
+
+
+  # ========================================
+  # COURSES
+  # ========================================
+
+  - intent: ask_courses
+    examples: |
+      - show me [CSE](department) courses
+      - [CSE](department) courses
+      - what courses are in [CSE](department)
+      - [CSE](department) course list
+      - courses offered in [CSE](department)
+      - what are the [CSE](department) courses
+      - [EEE](department) courses
+      - show me [EEE](department) courses
+      - list all [EEE](department) courses
+      - [electrical](department) courses
+      - [Electrical and Electronic Engineering](department) courses
+      - what courses does [EEE](department) have
+      - [BBA](department) courses
+      - show me [BBA](department) courses
+      - [business](department) courses
+      - [business administration](department) courses
+      - what are [BBA](department) courses
+      - [civil](department) courses
+      - [civil engineering](department) courses
+      - show [CE](department) courses
+      - list [civil](department) courses
+      - [English](department) courses
+      - courses in [English](department)
+      - [English](department) course list
+      - show [English](department) courses
+      - [pharmacy](department) courses
+      - [pharm](department) courses
+      - show [pharmacy](department) courses
+      - list [pharmacy](department) courses
+      - [law](department) courses
+      - [LLB](department) courses
+      - show me [law](department) courses
+      - [economics](department) courses
+      - [eco](department) courses
+      - show [economics](department) courses
+      - [sociology](department) courses
+      - [soc](department) courses
+      - show [sociology](department) courses
+      - [math](department) courses
+      - [mathematics](department) courses
+      - show [math](department) courses
+      - show [MBA](department) courses
+      - [MBA](department) courses
+      - [EMBA](department) courses
+      - [MS CSE](department) courses
+      - [masters](program_type) courses in [CSE](department)
+      - [graduate](program_type) [CSE](department) courses
+      - [undergraduate](program_type) [CSE](department) courses
+      - [bachelor](program_type) courses in [BBA](department)
+      - courses in [EEE](department) department
+      - how many courses are there in the [CSE](department) department
+      - what is the total credit for [BBA](department)
+      - how many subjects in [CSE](department)
+      - [CSE](department) department course count
+      - সিএসই বিভাগে কয়টি কোর্স আছে?
+      - [CSE](department) এর কোর্সগুলো কি কি
+      - [CSE](department) বিভাগের কোর্স তালিকা
+      - [EEE](department) এর কোর্স দেখান
+      - [BBA](department) এ কি কি পড়ানো হয়
+      - [ইংরেজি](department) বিভাগের কোর্স
+      - [ফার্মেসি](department) বিভাগের কোর্স কি কি
+      - [আইন](department) বিভাগের কোর্সসমূহ
+
+
+
+  - intent: ask_course_details
+    examples: |
+      - [CSE101](course_code)
+      - what is [CSE101](course_code)
+      - [CSE101](course_code) details
+      - tell me about [CSE101](course_code)
+      - course [CSE101](course_code)
+      - [CSE 101](course_code)
+      - [CSE-101](course_code)
+      - show me [CSE101](course_code)
+      - [CSE201](course_code) info
+      - [CSE301](course_code)
+      - [CSE401](course_code) details
+      - [EEE201](course_code)
+      - [EEE101](course_code) details
+      - what is [EEE301](course_code)
+      - [EEE 201](course_code)
+      - [EEE-201](course_code)
+      - tell me about [EEE101](course_code)
+      - [BBA301](course_code) info
+      - [BBA101](course_code)
+      - what is [BBA201](course_code)
+      - [BBA 301](course_code) details
+      - [BBA-201](course_code)
+      - course [BBA401](course_code)
+      - [ENG101](course_code) details
+      - [ENG201](course_code)
+      - what is [ENG101](course_code)
+      - [ENG 101](course_code)
+      - [MAT120](course_code)
+      - what is [MAT120](course_code)
+      - [MATH101](course_code) details
+      - [MAT 120](course_code)
+      - [PHY101](course_code)
+      - [PHY201](course_code) details
+      - [CE101](course_code)
+      - [CE201](course_code) details
+      - [CIVIL101](course_code)
+      - [LAW101](course_code)
+      - [LAW201](course_code) details
+      - [ECO101](course_code)
+      - [ECO201](course_code) details
+      - [SOC101](course_code)
+      - [SOC201](course_code) details
+      - [PHARM101](course_code)
+      - [PHARM201](course_code) details
+      - show me [CSE401](course_code)
+      - tell me about [BBA301](course_code)
+      - course details for [EEE201](course_code)
+      - [CSE101](course_code) সম্পর্কে বলুন
+      - [CSE101](course_code) কোর্সের বিবরণ
+      - [EEE201](course_code) কোর্সটি কি
+
+
+  # ========================================
+  # UNIVERSITY INFORMATION
+  # ========================================
+
+  - intent: location
+    examples: |
+      - Where is East West University located?
+      - where is East West University
+      - location of East West University
+      - address of East West University
+      - where is EWU
+      - EWU location
+      - campus location
+      - where is the campus
+      - how to reach EWU
+      - directions to EWU
+      - where exactly is EWU located
+      - give me the address
+      - what is the campus location
+      - Aftabnagar campus
+      - Jahurul Islam City
+      - ইস্ট ওয়েস্ট ইউনিভার্সিটি কোথায় অবস্থিত?
+      - ইউনিভার্সিটির ঠিকানা কি
+      - EWU কোথায় অবস্থিত
+      - EWU এর ঠিকানা কি
+      - ক্যাম্পাস কোথায়
+      - আফতাবনগর ক্যাম্পাস কোথায়
+
+
+  - intent: socials
+    examples: |
+      - EWU facebook
+      - facebook page
+      - social media
+      - facebook of EWU
+      - follow EWU
+      - EWU social media
+      - facebook link
+      - social presence
+      - EWU এর ফেসবুক পেজ
+      - ইউনিভার্সিটির সোশ্যাল মিডিয়া
+      - EWU ফলো করব কিভাবে
+      - ফেসবুক লিঙ্ক দিন
+
+
+  - intent: departments
+    examples: |
+      - Can you show me the list of departments offered by the university?
+      - list of departments offered
+      - what departments are there
+      - departments at EWU
+      - available departments
+      - all departments
+      - how many departments
+      - department list
+      - show me departments
+      - CSE, EEE, BBA departments
+      - what faculties are available
+      - বিশ্ববিদ্যালয়ে যে বিভাগগুলো রয়েছে সেগুলোর তালিকা দেখাতে পারবে?
+      - EWU তে কি কি বিভাগ আছে
+      - বিভাগের তালিকা দিন
+      - কত বিভাগ আছে
+      - কোন কোন ডিপার্টমেন্ট আছে
+      - সব বিভাগের নাম বলুন
+
+
+  # ========================================
+  # ABOUT EWU
+  # ========================================
+
+  - intent: ewu_history
+    examples: |
+      - what is the history of EWU
+      - when was EWU founded
+      - when did EWU start
+      - who founded EWU
+      - EWU founding year
+      - tell me about EWU history
+      - initial faculty and students
+      - first classes at EWU
+      - PFED organization
+      - Private University Act
+      - EWU এর ইতিহাস কি
+      - ইউনিভার্সিটি কখন প্রতিষ্ঠিত হয়
+      - EWU কে প্রতিষ্ঠা করেছেন
+      - EWU কোন সালে শুরু হয়
+      - ইস্ট ওয়েস্ট বিশ্ববিদ্যালয়ের ইতিহাস
+
+
+  - intent: ewu_vision
+    examples: |
+      - what is the vision of EWU
+      - EWU vision statement
+      - vision of East West University
+      - what are the goals of EWU
+      - university vision
+      - EWU vision and goals
+      - why should I get admitted into EWU
+      - why choose EWU
+      - what makes EWU special
+      - why should I study at EWU
+      - what are the benefits of studying at EWU
+      - EWU এর ভিশন কি
+      - বিশ্ববিদ্যালয়ের লক্ষ্য কি
+      - EWU কি অর্জন করতে চায়
+      - ইউনিভার্সিটির দৃষ্টিভঙ্গি
+      - আমি কেন ইস্ট ওয়েস্ট ইউনিভার্সিটিতে ভর্তি হব?
+      - EWU তে পড়ার সুবিধা কি
+      - কেন EWU বেছে নেব
+
+
+  - intent: ewu_mission
+    examples: |
+      - what is the mission of EWU
+      - EWU mission statement
+      - mission of East West University
+      - what is EWU mission
+      - university mission
+      - EWU goals and objectives
+      - EWU এর মিশন কি
+      - বিশ্ববিদ্যালয়ের উদ্দেশ্য কি
+      - EWU কি উদ্দেশ্যে কাজ করে
+      - মিশন স্টেটমেন্ট বলুন
+
+  # ========================================
+  # PROGRAMS
+  # ========================================
+
+  - intent: ask_programs
+    examples: |
+      - list [undergraduate](program_level) programs
+      - [bachelors](program_level) programs available
+      - what [UG](program_level) programs do you offer
+      - [four year](program_level) bachelor degrees
+      - show me [bachelor](program_level) options
+      - [Bachelor of Science](program_level) programs
+      - [BSc](program_level) degree programs
+      - [Bachelor of Arts](program_level) courses
+      - [masters](program_level) programs list
+      - show [graduate](program_level) programs
+      - [PG](program_level) degree options
+      - [masters degree](program_level) programs
+      - available [MS](program_level) programs
+      - [postgraduate](program_level) courses
+      - [diploma](program_level) programs
+      - [post graduate diploma](program_level)
+      - [PGD](program_level) courses
+      - [certificate](program_level) programs
+      - [professional diploma](program_level)
+      - short term [diploma](program_level)
+      - all available programs
+      - what degrees do you offer
+      - list of programs
+      - academic programs offered
+      - courses available
+      - কি কি প্রোগ্রাম আছে
+      - স্নাতক প্রোগ্রামের তালিকা দিন
+      - স্নাতকোত্তর কি কি প্রোগ্রাম আছে
+      - ডিপ্লোমা প্রোগ্রাম কি আছে
+      - EWU তে কি পড়ানো হয়
+      - সব ডিগ্রির তালিকা
+      - কোন কোন ডিগ্রি পাওয়া যায়
+      - [স্নাতক](program_level) প্রোগ্রাম কি কি
+      - [স্নাতকোত্তর](program_level) প্রোগ্রাম দেখান
+
+
+  # ========================================
+  # TUITION FEES
+  # ========================================
+
+  - intent: tuition_fee
+    examples: |
+      - [undergraduate](fee_level) [CSE](department) tuition fee
+      - [bachelor](fee_level) [EEE](department) program fees
+      - [UG](fee_level) [Pharmacy](department) tuition cost
+      - how much is [undergraduate](fee_level) [BBA](department) tuition
+      - [CSE](department) [bachelor](fee_level) semester fees
+      - [masters](fee_level) [CSE](department) tuition fee
+      - [graduate](fee_level) [English](department) program cost
+      - [PG](fee_level) [MBA](department) fees structure
+      - [CSE](department) [masters](fee_level) annual tuition
+      - [diploma](fee_level) [Nursing](department) fees
+      - [certificate](fee_level) [IT](department) program cost
+      - [CSE](department) tuition fees
+      - [EEE](department) program fees
+      - [Pharmacy](department) tuition cost
+      - [BBA](department) semester fees
+      - [undergraduate](fee_level) tuition fee
+      - [masters](fee_level) program fees
+      - [diploma](fee_level) tuition
+      - tuition fee
+      - tuition fees
+      - how much is tuition
+      - program fees
+      - fee structure
+      - what is the current tuition fee for Computer Science
+      - has there been a recent change in the per credit fee for CSE courses
+      - current per credit fee for CSE
+      - did the CSE tuition fee change recently
+      - what is the latest fee for Computer Science program
+      - updated fee structure for CSE
+      - পড়াশোনার খরচ কত
+      - টিউশন ফি কত
+      - [CSE](department) এর টিউশন ফি কত
+      - [EEE](department) পড়তে কত খরচ
+      - [BBA](department) এর ফি স্ট্রাকচার কি
+      - সেমিস্টার ফি কত
+      - মোট খরচ কত
+      - [স্নাতক](fee_level) টিউশন ফি
+      - [স্নাতকোত্তর](fee_level) ফি কত
+      - [MBA](department) পড়তে কত লাগবে
+      - কম্পিউটার সায়েন্সের বর্তমান টিউশন ফি কত?
+      - সিএসই কোর্সগুলোর প্রতি ক্রেডিট ফিতে কি সম্প্রতি কোনো পরিবর্তন হয়েছে?
+
+
+  # ========================================
+  # ADMISSION OVERVIEW
+  # ========================================
+
+  - intent: admission_overview
+    examples: |
+      - what is the admission process
+      - how to apply for admission
+      - steps for admission application
+      - admission application process
+      - how do I get admitted
+      - admission procedure
+      - how to apply for admission at EWU
+      - what are the steps to apply for admission
+      - can you guide me through the admission process
+      - what is the process to get admitted to EWU
+      - how can I apply
+      - how to apply
+      - admission overview
+      - ভর্তি প্রক্রিয়া কি
+      - কিভাবে ভর্তি হবো
+      - ভর্তির ধাপগুলো কি কি
+      - EWU তে কিভাবে আবেদন করব
+      - ভর্তি হওয়ার উপায় কি
+      - আবেদন করার নিয়ম কি
+      - ভর্তি পদ্ধতি বলুন
+      - অনলাইনে ভর্তি হবো কিভাবে
+      - আমি কীভাবে ভর্তির জন্য আবেদন করতে পারি?
+
+
+  # ========================================
+  # ADMISSION DEADLINES
+  # ========================================
+
+  - intent: ask_admission_deadline
+    examples: |
+      - when is the [undergraduate](deadline_level) application deadline
+      - What is the current [bachelor](deadline_level) program deadline?
+      - [UG](deadline_level) application last date
+      - [masters](deadline_level) application closing date
+      - [graduate](deadline_level) registration deadline
+      - [diploma](deadline_level) application deadline
+      - [CSE](department) application deadline
+      - when is [EEE](department) application last date
+      - [BBA](deadline_level) program deadline
+      - [Pharmacy](department) registration closing date
+      - [English](department) application form last date
+      - [undergraduate](deadline_level) [CSE](department) deadline
+      - [masters](deadline_level) [MBA](department) application date
+      - [diploma](deadline_level) [Nursing](department) last date
+      - when does [UG](deadline_level) [EEE](department) application close
+      - [early action](deadline_type) deadline
+      - [early decision](deadline_type) last date
+      - [regular decision](deadline_type) application deadline
+      - [rolling admission](deadline_type) closing date
+      - when is the application deadline
+      - what is the last date to apply
+      - admission application deadline
+      - last date for application
+      - deadline for application
+      - when can I apply for application
+      - application closing date
+      - last date to submit form
+      - registration deadline
+      - application last date
+      - when applications close
+      - deadline approaching
+      - what is the current application deadline for undergraduate programs
+      - current undergraduate application deadline
+      - স্নাতক প্রোগ্রামগুলোর জন্য আবেদনের বর্তমান শেষ তারিখ কবে?
+      - আবেদনের শেষ তারিখ কবে
+      - ভর্তির ডেডলাইন কখন
+      - আবেদন কখন পর্যন্ত করা যাবে
+      - [CSE](department) ভর্তির শেষ তারিখ কি
+      - ফর্ম জমার শেষ দিন কবে
+      - [স্নাতক](deadline_level) ভর্তির সময়সীমা কি
+      - আবেদন বন্ধ হবে কখন
+      - [MBA](department) এর ডেডলাইন কবে
+
+
+  # ========================================
+  # ADMISSION REQUIREMENTS
+  # ========================================
+
+  - intent: ask_admission_requirements
+    examples: |
+      - what are the [undergraduate](req_level) admission requirements
+      - [bachelor](req_level) program eligibility criteria
+      - [UG](req_level) admission qualifications
+      - [masters](req_level) admission requirements
+      - [graduate](req_level) eligibility criteria
+      - [diploma](req_level) minimum requirements
+      - [CSE](department) admission requirements
+      - [EEE](department) eligibility criteria
+      - what do I need for [BBA](department) admission
+      - [Pharmacy](department) admission qualifications
+      - [English](department) minimum requirements
+      - [undergraduate](req_level) [CSE](department) requirements
+      - [masters](req_level) [MBA](department) eligibility
+      - [diploma](req_level) [Nursing](department) admission criteria
+      - [UG](req_level) [EEE](department) qualifications needed
+      - [GPA](req_type) requirements for admission
+      - [entrance exam](req_type) for [undergraduate](req_level)
+      - [English proficiency](req_type) requirements
+      - [documents](req_type) needed for admission
+      - what are the admission requirements
+      - admission requirements for undergraduate
+      - requirements for admission
+      - what do I need to get admitted
+      - eligibility criteria
+      - admission eligibility
+      - how to qualify for admission
+      - admission qualification
+      - what qualifications are needed
+      - requirements to apply
+      - minimum requirements
+      - am I eligible
+      - can I apply
+      - what documents are needed for the admission process
+      - what papers do I need to apply
+      - documents required for EWU admission
+      - what certificates are needed for admission
+      - ভর্তির যোগ্যতা কি
+      - কি কি লাগবে ভর্তির জন্য
+      - [CSE](department) ভর্তির শর্ত কি
+      - [EEE](department) ভর্তির যোগ্যতা কি
+      - ন্যূনতম জিপিএ কত লাগে
+      - কোন কোন কাগজ লাগবে
+      - ভর্তির জন্য কি লাগে
+      - [স্নাতক](req_level) ভর্তির যোগ্যতা
+      - আমি কি ভর্তি হতে পারব
+      - ভর্তি প্রক্রিয়ার জন্য কী কী কাগজপত্র প্রয়োজন?
+      - আন্তর্জাতিক শিক্ষার্থীরা কি ভর্তির জন্য আবেদন করতে পারে?
+ 
+
+  # ========================================
+  # SCHOLARSHIPS
+  # ========================================
+
+  - intent: scholarships_waivers
+    examples: |
+      - scholarship eligibility
+      - how to get scholarship
+      - scholarship requirements
+      - tuition waiver
+      - fee waiver
+      - waiver information
+      - who can apply for scholarship
+      - am I eligible for scholarship
+      - tuition reduction
+      - fee reduction
+      - financial aid options
+      - financial assistance
+      - scholarship programs
+      - A+ SSC HSC scholarship
+      - 75% admission test scholarship
+      - top 10% student scholarship
+      - district scholarship eligibility
+      - foreign student waiver
+      - 3.95 CGPA scholarship
+      - full tuition merit scholarship
+      - 100% tuition waiver CSE
+      - graduate 75% waiver CGPA 3.90
+      - BBA scholarship requirements
+      - freedom fighter scholarship
+      - EWU employee tuition waiver
+      - Medha Lalon Fund eligibility
+      - family concession waiver
+      - 50% waiver foreign students
+      - are there any scholarship opportunities
+      - what are the terms and conditions for merit scholarships
+      - merit scholarship conditions
+      - how to qualify for a merit scholarship
+      - what GPA do I need for a scholarship
+      - বৃত্তি পাবো কিভাবে
+      - স্কলারশিপের জন্য যোগ্যতা কি
+      - টিউশন মওকুফ পাওয়া যাবে কি
+      - আর্থিক সহায়তা আছে কি
+      - ফি ছাড় পাবো কিভাবে
+      - স্কলারশিপের তালিকা দিন
+      - মুক্তিযোদ্ধা কোটায় বৃত্তি
+      - মেধা লালন ফান্ড কি
+      - সম্পূর্ণ বৃত্তি পাওয়া সম্ভব কি
+      - কোনো স্কলারশিপের সুযোগ আছে কি?
+      - মেরিট স্কলারশিপের শর্তাবলি কী?
+
+
+  # ========================================
+  # CONDUCT RULES
+  # ========================================
+
+  - intent: general_conduct_rules
+    examples: |
+      - what are the general conduct rules
+      - university conduct expectations
+      - student behavior rules
+      - general rules and conduct
+      - moral character requirements
+      - rules at ewu
+      - code of conduct
+      - policy on student conduct
+      - EWU তে কি কি নিয়ম আছে
+      - ছাত্রদের আচরণবিধি কি
+      - ইউনিভার্সিটির নিয়মকানুন কি
+      - আচরণ সংক্রান্ত নিয়ম বলুন
+      - শাস্তিযোগ্য কার্যকলাপ কি কি
+
+
+  # ========================================
+  # ALUMNI
+  # ========================================
+
+  - intent: alumni
+    examples: |
+      - how successful are the alumni of East West University
+      - how successful are EWU alumni
+      - famous alumni
+      - alumni achievements
+      - alumni success stories
+      - where do alumni work
+      - alumni association
+      - how to connect with alumni
+      - alumni connections
+      - Can you tell me about some notable EWU alumni
+      - who are notable EWU alumni?
+      - tell me about EWU alumni
+      - list notable alumni
+      - what alumni achievements?
+      - who are successful EWU graduates?
+      - alumni
+      - alumni ewu
+      - EWU এর প্রাক্তন শিক্ষার্থীরা কে কে
+      - বিখ্যাত প্রাক্তন ছাত্র কারা
+      - অ্যালামনাই নেটওয়ার্ক কি
+      - EWU এর সফল গ্র্যাজুয়েট কারা
+      - EWU-এর কিছু উল্লেখযোগ্য প্রাক্তন শিক্ষার্থীর সম্পর্কে বলতে পারবে?
+      
+
+  # ========================================
+  # GRADING
+  # ========================================
+
+  - intent: grading
+    examples: |
+      - grading system
+      - how are grades calculated
+      - grade distribution
+      - grading scale
+      - marking system
+      - grade point
+      - GPA
+      - CGPA
+      - what grades are passing
+      - letter grades
+      - grade conversion
+      - গ্রেডিং সিস্টেম কি
+      - জিপিএ কিভাবে হিসাব হয়
+      - সিজিপিএ কি
+      - পাশ মার্ক কত
+      - গ্রেড স্কেল কি
+      - নম্বর পদ্ধতি কি
+      - A+ পেতে কত নম্বর লাগে
+
+
+  # ========================================
+  # CLUBS & SOCIETIES
+  # ========================================
+
+  - intent: clubs_societies
+    examples: |
+      - student clubs
+      - clubs and societies
+      - what clubs are available
+      - student organizations
+      - student groups
+      - EWU clubs list
+      - show all societies
+      - [programming club](club_name)
+      - [business club](club_name) EWU
+      - [robotics club](club_name)
+      - [debating club](club_name)
+      - [sports club](club_name)
+      - [MUN club](club_name)
+      - [CSE](faculty) clubs
+      - [EEE](faculty) societies
+      - [business faculty](faculty) clubs
+      - [FBE](faculty) student organizations
+      - [technical clubs](category)
+      - [cultural clubs](category)
+      - [coding clubs](category)
+      - [marketing clubs](category)
+      - clubs for [debate](activity)
+      - [photography](activity) society
+      - [music](activity) performing arts
+      - [IEEE](organization) student branch
+      - EWU তে কি কি ক্লাব আছে
+      - ছাত্র সংগঠনের তালিকা
+      - কোন কোন সোসাইটি আছে
+      - এক্সট্রা কারিকুলার কি আছে
+      - ক্লাব জয়েন করব কিভাবে
+
+
+  # ========================================
+  # HELPDESK
+  # ========================================
+
+  - intent: ask_helpdesk_contact
+    examples: |
+      - how can I contact a department?
+      - helpdesk contact information
+      - I need to reach a department
+      - department email addresses
+      - where can I get help?
+      - contact information for departments
+      - how to contact EWU departments
+      - department helpdesk
+      - I need help with my department
+      - contact details for departments
+      - [CSE helpdesk](dept) contact
+      - [BBA department](dept) email
+      - [Pharmacy helpdesk](dept) email
+      - [EEE support](dept) contact
+      - [Accounts office](office) email
+      - [Registrar helpdesk](office)
+      - email for [department help](purpose)
+      - department support contact
+      - [financial issues](purpose) helpdesk
+      - [IT support](purpose) ICS
+      - [transcript request](purpose) COE
+      - how can I contact the registrar's office
+      - registrar office contact
+      - give me the email of the CSE department helpdesk
+      - CSE department helpdesk email
+      - কোন বিভাগে যোগাযোগ করব
+      - হেল্পডেস্কের ইমেইল কি
+      - বিভাগের ফোন নম্বর দিন
+      - সহায়তা কোথায় পাব
+      - অফিসের যোগাযোগ তথ্য দিন
+      - আমি কীভাবে রেজিস্ট্রারের অফিসের সাথে যোগাযোগ করতে পারি?
+      - আমাকে সিএসই বিভাগের হেল্পডেস্কের ইমেইলটি দিন
+   
+
+# ── 1. Program credits & duration ────────────────────────────────────────────
+  - intent: ask_program_details
+    examples: |
+      # English
+      - How many credits does each program have?
+      - What is the duration of EWU programs?
+      - How long is the CSE program?
+      - Tell me the credit hours for all programs
+      - What is the total credit requirement for MBA?
+      - How many credits for undergraduate programs?
+      - What is the duration of the BBA program?
+      - Show me program credits and duration
+      - How many semesters does the EWU program take?
+      - How long does the MS-CSE program take to complete?
+      - What are the credit requirements for graduate programs?
+      - How many years is the BSc program?
+      - Program duration and credits please
+      - Credits needed to graduate from EWU
+      - How long is the EMBA program?
+      - Tell me about the BBA total credits.
+      - প্রতিটি প্রোগ্রামে কত ক্রেডিট লাগে?
+      - ইডব্লিউইউ প্রোগ্রামের মেয়াদ কত?
+      - সিএসই প্রোগ্রাম কত বছরের?
+      - বিবিএ প্রোগ্রামের ক্রেডিট কত?
+      - স্নাতক প্রোগ্রামে কত ক্রেডিট প্রয়োজন?
+      - স্নাতকোত্তর প্রোগ্রামের সময়কাল কত?
+      - এমবিএ করতে কত ক্রেডিট লাগে?
+      - প্রোগ্রামের ক্রেডিট ও মেয়াদ দেখাও
+      - কত সেমিস্টারে প্রোগ্রাম শেষ হয়?
+      - ইইই প্রোগ্রামের মোট ক্রেডিট কত?
+      - বিবিএ কোর্সের মোট ক্রেডিট সম্পর্কে বলো।
+
+
+
+# ── 2. Campus facilities ──────────────────────────────────────────────────────
+  - intent: ask_facilities
+    examples: |
+      # English
+      - What facilities does EWU have?
+      - Tell me about EWU campus facilities
+      - Does EWU have a library?
+      - Is there a computer lab at EWU?
+      - Does EWU have a gym?
+      - What is available on the EWU campus?
+      - Tell me about EWU's medical center
+      - Is there a cafeteria at EWU?
+      - What transport facilities does EWU offer?
+      - Does EWU have a mosque?
+      - Tell me about EWU labs
+      - What sports facilities are available at EWU?
+      - Campus amenities at EWU
+      - EWU library hours
+      - Is there a shuttle bus at EWU?
+      - What research labs does EWU have?
+      - ইডব্লিউইউতে কী কী সুবিধা আছে?
+      - ইডব্লিউইউ ক্যাম্পাসে কী কী সুবিধা পাওয়া যায়?
+      - ইডব্লিউইউতে লাইব্রেরি আছে কি?
+      - ক্যাম্পাসে কম্পিউটার ল্যাব আছে?
+      - ইডব্লিউইউতে ক্যাফেটেরিয়া আছে?
+      - পরিবহন সুবিধা সম্পর্কে জানতে চাই
+      - ইডব্লিউইউতে মসজিদ আছে?
+      - ক্যাম্পাসে কী কী খেলাধুলার সুবিধা আছে?
+      - ল্যাবরেটরি সম্পর্কে বলুন
+      - চিকিৎসা সুবিধা আছে কি?
+
+
+# ── 3. Events ─────────────────────────────────────────────────────────────────
+  - intent: ask_events
+    examples: |
+      # English
+      - What events are happening at EWU?
+      - Tell me about upcoming EWU events
+      - Is there any seminar at EWU?
+      - What workshops are scheduled at EWU?
+      - Any fest coming up at EWU?
+      - EWU upcoming events list
+      - Show me all EWU events
+      - Is there a cultural event at EWU?
+      - Any competition at EWU?
+      - Upcoming seminars at East West University
+      - Are there any webinars at EWU?
+      - What is happening at EWU this month?
+      - EWU sports event schedule
+      - Any upcoming workshop for students?
+      - Programming contest at EWU?
+      - ইডব্লিউইউতে কী ইভেন্ট হচ্ছে?
+      - আসন্ন ইভেন্টের তালিকা দাও
+      - ইডব্লিউইউতে কোনো সেমিনার আছে?
+      - ইডব্লিউইউতে ওয়ার্কশপ কবে?
+      - কোনো উৎসব বা ফেস্ট আসছে?
+      - ক্যাম্পাসে কী অনুষ্ঠান হচ্ছে?
+      - ইডব্লিউইউতে সাংস্কৃতিক অনুষ্ঠান আছে কি?
+      - কোনো প্রতিযোগিতা আসছে?
+      - সামনের মাসে কী ইভেন্ট আছে?
+      - প্রোগ্রামিং প্রতিযোগিতা কবে?
+
+# ========================================
+# SYNONYMS
+# ========================================
+
+  - synonym: Department
+    examples: |
+      - dept
+      - বিভাগ
+      - bibhag
+
+  - synonym: East West University
+    examples: |
+      - EWU
+      - East West Uni
+      - EastWest University
+      - East-West University
+      - the university
+      - our university
+      - ewu
+      - uni
+      - university
+      - ইস্ট ওয়েস্ট ইউনিভার্সিটি
+      - ইস্ট ওয়েস্ট বিশ্ববিদ্যালয়
+      - বিশ্ববিদ্যালয়
+      - ইউনিভার্সিটি
+      - bishwabidyalay
+      - university
+
+  - synonym: Faculty of Science and Engineering
+    examples: |
+      - FSE
+      - Science and Engineering Faculty
+      - School of Engineering and Science
+      - বিজ্ঞান ও প্রকৌশল অনুষদ
+
+  - synonym: Faculty of Business and Economics
+    examples: |
+      - FBE
+      - Business and Economics Faculty
+      - ব্যবসা ও অর্থনীতি অনুষদ
+
+  - synonym: Faculty of Liberal Arts and Social Sciences
+    examples: |
+      - FLASS
+      - FASS
+      - Arts and Social Sciences Faculty
+      - Humanities Faculty
+      - School of Arts and Social Sciences
+      - কলা ও সমাজবিজ্ঞান অনুষদ
+
+  - synonym: Computer Science and Engineering
+    examples: |
+      - CSE
+      - Computer Science
+      - CS
+      - CSE Department
+      - Computer Engineering Department
+      - Computer Science Dept
+      - কম্পিউটার বিজ্ঞান ও প্রকৌশল
+      - কম্পিউটার সায়েন্স
+      - সিএসই
+
+  - synonym: Electrical and Electronic Engineering
+    examples: |
+      - EEE
+      - Electrical Engineering
+      - Electronic Engineering
+      - EEE Department
+      - Power Engineering Department
+      - ইলেকট্রিক্যাল ও ইলেকট্রনিক ইঞ্জিনিয়ারিং
+      - ইলেকট্রিক্যাল ইঞ্জিনিয়ারিং
+      - ইইই
+
+  - synonym: Electronics and Communications Engineering
+    examples: |
+      - ICE
+      - Information and Communication Engineering
+      - Communications Engineering Department
+      - Telecommunications Department
+      - ICE Department
+      - ইলেকট্রনিক্স ও যোগাযোগ প্রকৌশল
+      - আইসিই
+
+  - synonym: Civil Engineering
+    examples: |
+      - CE
+      - Civil
+      - CE Department
+      - Civil Dept
+      - Civil department
+      - Civil Engineering Department
+      - সিভিল ইঞ্জিনিয়ারিং
+      - পুরকৌশল
+      - সিই
+
+  - synonym: Genetic Engineering and Biotechnology
+    examples: |
+      - GEB
+      - Genetic Engineering Department
+      - Biotechnology Department
+      - GEB Department
+      - Biotech Department
+      - জেনেটিক ইঞ্জিনিয়ারিং ও বায়োটেকনোলজি
+      - জিইবি
+
+  - synonym: Pharmacy
+    examples: |
+      - Pharmacy Department
+      - Pharmaceutical Sciences
+      - Pharmacy Faculty
+      - Pharmaceutical Engineering Department
+      - ফার্মেসি
+      - ওষুধ বিজ্ঞান
+      - ফার্মাসিউটিক্যাল
+
+  - synonym: Mathematical and Physical Sciences
+    examples: |
+      - MPS
+      - Math and Physics
+      - Mathematics Department
+      - Physical Sciences
+      - Mathematical Sciences Department
+      - গণিত বিভাগ
+      - গণিত ও পদার্থবিজ্ঞান
+      - ম্যাথ
+
+  - synonym: Business Administration
+    examples: |
+      - Business Admin
+      - Business Administration Department
+      - Business School
+      - Business Studies Department
+      - Business faculty
+      - Department of Business Administration
+      - ব্যবসায় প্রশাসন
+      - বিবিএ
+      - ব্যবসা বিভাগ
+
+  - synonym: Economics
+    examples: |
+      - Economics Department
+      - Econ
+      - Economic Sciences
+      - Applied Economics Department
+      - Econometrics Department
+      - অর্থনীতি
+      - অর্থনীতি বিভাগ
+      - ইকোনমিক্স
+
+  - synonym: English
+    examples: |
+      - English Department
+      - English Language
+      - English Literature Department
+      - English Studies
+      - Language Department
+      - ইংরেজি বিভাগ
+      - ইংরেজি
+      - ইংলিশ
+
+  - synonym: Law
+    examples: |
+      - Law Department
+      - Legal Studies
+      - Law Faculty
+      - School of Law
+      - Justice Studies
+      - আইন বিভাগ
+      - আইন
+      - আইন অনুষদ
+
+  - synonym: Social Relations
+    examples: |
+      - Social Relations Department
+      - SR Department
+      - Social Studies
+      - Interdisciplinary Studies Department
+      - সামাজিক সম্পর্ক বিভাগ
+
+  - synonym: Information Studies
+    examples: |
+      - IS Department
+      - Information Studies Department
+      - Library Science
+      - Information Science Department
+      - তথ্য বিজ্ঞান বিভাগ
+
+  - synonym: Sociology
+    examples: |
+      - Sociology Department
+      - Sociology and Anthropology
+      - Sociological Studies
+      - Social Anthropology Department
+      - সমাজবিজ্ঞান
+      - সমাজবিজ্ঞান বিভাগ
+
+  - synonym: Undergraduate Program
+    examples: |
+      - Bachelor degree
+      - Bachelor's program
+      - First degree
+      - Undergraduate studies
+      - UG program
+      - স্নাতক প্রোগ্রাম
+      - স্নাতক ডিগ্রি
+      - আন্ডারগ্র্যাজুয়েট
+      - ব্যাচেলর
+      - চার বছরের প্রোগ্রাম
+
+  - synonym: Graduate Program
+    examples: |
+      - Master's program
+      - Postgraduate studies
+      - Master's degree
+      - Advanced degree
+      - Post-graduate program
+      - Graduate studies
+      - Higher education
+      - স্নাতকোত্তর প্রোগ্রাম
+      - মাস্টার্স
+      - পোস্টগ্র্যাজুয়েট
+      - উচ্চতর ডিগ্রি
+
+  - synonym: Diploma Program
+    examples: |
+      - Diploma course
+      - Post-graduate diploma
+      - PGDM
+      - Certificate program
+      - Short-term program
+      - Professional diploma
+      - ডিপ্লোমা কোর্স
+      - স্বল্পমেয়াদী প্রোগ্রাম
+      - সার্টিফিকেট প্রোগ্রাম
+
+  - synonym: Office of Vice Chancellor
+    examples: |
+      - VC Office
+      - Vice Chancellor's office
+      - Administrative office
+      - উপাচার্যের দপ্তর
+      - ভিসি অফিস
+
+  - synonym: Office of Registrar
+    examples: |
+      - Registrar Office
+      - Academic Affairs Office
+      - রেজিস্ট্রার অফিস
+      - একাডেমিক অফিস
+
+  - synonym: Office of Proctor
+    examples: |
+      - Proctor's office
+      - Student Affairs Office
+      - Discipline office
+      - প্রক্টর অফিস
+      - শৃঙ্খলা অফিস
+
+  - synonym: Information and Communication Services
+    examples: |
+      - ICS
+      - IT Services
+      - Technical Support
+      - IT Department
+      - Computer Services
+      - আইটি সার্ভিস
+      - তথ্যপ্রযুক্তি বিভাগ
+
+  - synonym: Library Services
+    examples: |
+      - University Library
+      - Central Library
+      - Digital Library
+      - E-Library
+      - Library
+      - লাইব্রেরি
+      - গ্রন্থাগার
+      - বিশ্ববিদ্যালয় পাঠাগার
+
+  - synonym: Center for Research and Training
+    examples: |
+      - CRT
+      - Research Center
+      - Training Center
+      - গবেষণা কেন্দ্র
+      - প্রশিক্ষণ কেন্দ্র
+
+  - synonym: Engineering and Maintenance Department
+    examples: |
+      - EMD
+      - Maintenance Department
+      - Engineering Services
+      - Campus Services
+      - রক্ষণাবেক্ষণ বিভাগ
+
+  - synonym: Student Welfare Office
+    examples: |
+      - Student Affairs
+      - Student Support
+      - Welfare Services
+      - Student Services
+      - শিক্ষার্থী কল্যাণ অফিস
+
+  - synonym: Career Counseling Center
+    examples: |
+      - Career Services
+      - Placement Office
+      - Job Placement
+      - Career Development
+      - ক্যারিয়ার কাউন্সেলিং সেন্টার
+      - চাকরি পরামর্শ কেন্দ্র
+
+  - synonym: Medical Center
+    examples: |
+      - EWU Medical Centre
+      - Health Services
+      - Campus Clinic
+      - Health Center
+      - চিকিৎসা কেন্দ্র
+      - মেডিকেল সেন্টার
+      - স্বাস্থ্য সেবা কেন্দ্র
+      - ক্যাম্পাস ক্লিনিক
+
+  - synonym: Admission Office
+    examples: |
+      - Admissions Department
+      - Admission Services
+      - Enrollment Office
+      - ভর্তি অফিস
+      - ভর্তি বিভাগ
+      - ভর্তি কেন্দ্র
+
+  - synonym: Hostel
+    examples: |
+      - Dormitory
+      - Student accommodation
+      - On-campus housing
+      - Affiliated hostel
+      - ছাত্রাবাস
+      - হোস্টেল
+      - আবাসিক হল
+      - আবাসন সুবিধা
+
+  - synonym: Bachelor of Science
+    examples: |
+      - BSc
+      - B.Sc
+      - BS
+      - B.S.
+      - Undergraduate science degree
+      - বিএসসি
+
+  - synonym: Bachelor of Arts
+    examples: |
+      - BA
+      - B.A
+      - Undergraduate arts degree
+      - বিএ
+
+  - synonym: Bachelor of Business Administration
+    examples: |
+      - BBA
+      - B.B.A
+      - বিবিএ
+
+  - synonym: Bachelor of Pharmacy
+    examples: |
+      - B.Pharm
+      - B.Pharm.
+      - Pharmacy undergraduate degree
+      - বি ফার্ম
+
+  - synonym: Master of Science
+    examples: |
+      - MS
+      - M.S
+      - M.Sc
+      - MSc
+      - এমএস
+      - মাস্টার অব সায়েন্স
+
+  - synonym: Master of Arts
+    examples: |
+      - MA
+      - M.A
+      - এমএ
+      - মাস্টার অব আর্টস
+
+  - synonym: Master of Business Administration
+    examples: |
+      - MBA
+      - M.B.A
+      - Executive MBA
+      - EMBA
+      - এমবিএ
+      - ইএমবিএ
+
+  - synonym: Master of Pharmacy
+    examples: |
+      - M.Pharm
+      - M.Pharm.
+      - Pharmacy graduate degree
+      - এম ফার্ম
+
+  - synonym: Scholarship
+    examples: |
+      - বৃত্তি
+      - স্কলারশিপ
+      - টিউশন ওয়েভার
+      - ফি মওকুফ
+      - আর্থিক সহায়তা
+      - merit scholarship
+      - tuition waiver
+      - financial aid
+
+  - synonym: Admission
+    examples: |
+      - ভর্তি
+      - আবেদন
+      - enrollment
+      - vorti
+      - application
+      - ভর্তি প্রক্রিয়া
+
+  - synonym: Tuition Fee
+    examples: |
+      - টিউশন ফি
+      - পড়াশোনার খরচ
+      - সেমিস্টার ফি
+      - program fees
+      - fee structure
+      - per credit fee
+      - প্রতি ক্রেডিট ফি
