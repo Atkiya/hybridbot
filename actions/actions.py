@@ -1,6 +1,7 @@
 import asyncio
 from typing import Any, Text, Dict, List
 import logging
+import aiohttp
 from rasa_sdk import Action, Tracker
 from rasa_sdk.executor import CollectingDispatcher
 from rasa_sdk.events import SlotSet
@@ -2644,14 +2645,16 @@ def _build_router():
 
 
 
-
-
+import inspect
 
 class ActionDefaultFallback(Action):
     def name(self):
         return "action_default_fallback"
 
     def __init__(self):
+        self.rag_url = "https://atkiya110-rag-server.hf.space/rag"
+        self.timeout = 120
+        self.max_retries = 1
         self._router = _build_router()
 
     def _route(self, text: str):
@@ -2662,7 +2665,7 @@ class ActionDefaultFallback(Action):
                     return action_cls
         return None
 
-    def run(self, dispatcher, tracker, domain):
+    async def run(self, dispatcher, tracker, domain):
         user_message = tracker.latest_message.get("text", "").strip()
         lang = detect_language(user_message) if user_message else "english"
         logger.info(f"[action_default_fallback] lang={lang}  query={user_message!r}")
@@ -2674,7 +2677,60 @@ class ActionDefaultFallback(Action):
         matched_cls = self._route(user_message)
         if matched_cls is not None:
             logger.info(f"[action_default_fallback] keyword-routed to {matched_cls.__name__}")
-            return matched_cls().run(dispatcher, tracker, domain)
+            result = matched_cls().run(dispatcher, tracker, domain)
+            if inspect.isawaitable(result):
+                return await result
+            return result
+
+        # ── 2. Embed for RAG ──────────────────────────────────────────────────
+        try:
+            query_embedding = embed_query(user_message)
+        except Exception as e:
+            logger.warning(f"Embedding failed: {e}")
+            query_embedding = None
+
+        # ── 3. RAG call ───────────────────────────────────────────────────────
+        for attempt in range(self.max_retries):
+            try:
+                async with aiohttp.ClientSession(
+                    timeout=aiohttp.ClientTimeout(total=self.timeout)
+                ) as session:
+                    payload: Dict[str, Any] = {"query": user_message, "top_k": 5}
+                    if query_embedding is not None:
+                        payload["query_embedding"] = query_embedding
+
+                    async with session.post(self.rag_url, json=payload) as response:
+                        if response.status == 200:
+                            result     = await response.json()
+                            raw_answer = result.get("answer", "").strip()
+                            rag_lang   = result.get("detected_language", lang)
+                            if rag_lang not in ("bangla", "banglish", "english"):
+                                rag_lang = lang
+
+                            if not raw_answer or raw_answer.startswith("["):
+                                sources = result.get("sources", [])
+                                if sources:
+                                    raw_answer = (
+                                        f"Found {len(sources)} relevant record(s) in the "
+                                        "EWU database but could not generate a summary. "
+                                        "Please contact admissions@ewubd.edu."
+                                    )
+                                else:
+                                    dispatcher.utter_message(text=_NO_INFO_MSG[rag_lang])
+                                    return []
+
+                            dispatcher.utter_message(text=_lang_wrap(raw_answer, rag_lang))
+                            return []
+
+            except asyncio.TimeoutError:
+                logger.warning(f"RAG timeout on attempt {attempt + 1}")
+            except aiohttp.ClientConnectorError:
+                logger.error(f"Cannot connect to RAG at {self.rag_url}")
+                break
+            except Exception as e:
+                logger.error(f"Unexpected RAG error: {e}", exc_info=True)
+                if attempt >= self.max_retries - 1:
+                    break
 
         dispatcher.utter_message(text=_CONTACT_MSG[lang])
         return []
