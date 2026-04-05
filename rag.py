@@ -61,25 +61,40 @@ DEVICE = "cpu"
 # CONFIG
 # ─────────────────────────────────────────────
 API_BASE    = os.getenv("API_BASE",    "https://ewu-server.onrender.com/api")
-API_KEY     = os.getenv("API_KEY",     "")
+API_KEY     = os.getenv("API_KEY",     "i6EDytaX4E2jI6GvZQc0b1RSZHTI5_wVRa2rfL7rLpk")
 API_HEADERS = {"x-api-key": API_KEY}
 GITHUB_BASE = os.getenv("GITHUB_BASE", "https://raw.githubusercontent.com/Atkiya/jsonfiles/main/")
 
-# ── Local SLM (≤4B, Bengali/Banglish aware) ───────────────────────────────────
-# Qwen2.5-3B-Instruct: 3B params, best Bengali support at this size, Apache-2.0
-LOCAL_GEN_MODEL    = os.getenv("LOCAL_GEN_MODEL",    "Qwen/Qwen2.5-3B-Instruct")
-GEN_DEVICE         = os.getenv("GEN_DEVICE",         "cpu")   # cpu | cuda | mps
-GEN_LOAD_IN_4BIT   = os.getenv("GEN_LOAD_IN_4BIT",  "false").lower() == "true"
-GEN_MAX_NEW_TOKENS = int(os.getenv("GEN_MAX_NEW_TOKENS", "700"))
-GEN_TIMEOUT_S      = int(os.getenv("GEN_TIMEOUT_S",    "120"))   # CPU is slow; allow 2 min
+# ── FIX: Switched from Qwen2.5-3B to TinyLlama-1.1B-Chat ────────────────────
+# TinyLlama is ~3x faster on CPU (1.1B params vs 3B), needs less RAM,
+# and follows chat templates correctly via its built-in tokenizer config.
+LOCAL_GEN_MODEL  = os.getenv("LOCAL_GEN_MODEL",  "TinyLlama/TinyLlama-1.1B-Chat-v1.0")
+GEN_DEVICE       = os.getenv("GEN_DEVICE",       "cpu")
+GEN_LOAD_IN_4BIT = os.getenv("GEN_LOAD_IN_4BIT", "false").lower() == "true"
 
-# ── Groq API — used ONLY as fallback when local model is unavailable ───────────
+# TinyLlama on CPU: ~8-15 tok/s → 256 tokens ≈ 17-32 s — well within budget.
+_CPU_MAX_NEW_TOKENS = 256
+_DEFAULT_MAX_TOKENS = _CPU_MAX_NEW_TOKENS if GEN_DEVICE == "cpu" else 700
+GEN_MAX_NEW_TOKENS  = int(os.getenv("GEN_MAX_NEW_TOKENS", str(_DEFAULT_MAX_TOKENS)))
+
+# TinyLlama context window = 2048 tokens.
+# ~3500 chars ≈ ~900 tokens → leaves ~900 tokens for new output after overhead.
+GEN_PROMPT_MAX_CHARS = int(os.getenv("GEN_PROMPT_MAX_CHARS", "3500"))
+
+_CPU_TIMEOUT  = max(60, GEN_MAX_NEW_TOKENS * 2)   # 2 s/tok worst-case on slow CPU
+GEN_TIMEOUT_S = int(os.getenv("GEN_TIMEOUT_S", str(_CPU_TIMEOUT if GEN_DEVICE == "cpu" else 90)))
+
+# ── FIX: llama-3.2-3b-preview is DEPRECATED on Groq — causes HTTP 400 ────────
+# Replaced with llama-3.1-8b-instant: fast, free-tier, actively supported.
 GROQ_API_KEY        = os.getenv("GROQ_API_KEY", "")
-GROQ_FALLBACK_MODEL = os.getenv("GROQ_FALLBACK_MODEL", "llama-3.2-3b-preview")  # 3B on Groq
+GROQ_FALLBACK_MODEL = os.getenv("GROQ_FALLBACK_MODEL", "llama-3.1-8b-instant")
 GROQ_MAX_TOKENS     = int(os.getenv("GROQ_MAX_TOKENS",  "700"))
 GROQ_TIMEOUT        = int(os.getenv("GROQ_TIMEOUT",     "60"))
 
-# ── Retrieval models ──────────────────────────────────────────────────────────
+# Prefer Groq on CPU (fast API call beats slow local inference).
+_default_prefer_groq = "true" if GEN_DEVICE == "cpu" else "false"
+GEN_PREFER_GROQ = os.getenv("GEN_PREFER_GROQ", _default_prefer_groq).lower() == "true"
+
 EMBED_MODEL           = os.getenv("EMBED_MODEL",           "intfloat/multilingual-e5-small")
 PRIMARY_RERANK_MODEL  = os.getenv("PRIMARY_RERANK_MODEL",  "BAAI/bge-reranker-v2-m3")
 FALLBACK_RERANK_MODEL = os.getenv("FALLBACK_RERANK_MODEL", "cross-encoder/ms-marco-MiniLM-L-6-v2")
@@ -94,9 +109,8 @@ CACHE_DIR        = os.getenv("CACHE_DIR",            "./cache")
 CACHE_TTL_H      = int(os.getenv("CACHE_TTL_H",      "24"))
 API_FAIL_LIMIT   = int(os.getenv("API_FAIL_LIMIT",   "3"))
 
-GEN_PROMPT_MAX_CHARS = int(os.getenv("GEN_PROMPT_MAX_CHARS", "6000"))
-
-CACHE_VERSION = "v7_qwen"
+# Bumped so stale Qwen-era pickle files are not reused
+CACHE_VERSION = "v8_tinyllama"
 
 # ─────────────────────────────────────────────
 # API ENDPOINTS
@@ -233,11 +247,10 @@ class AppState:
     embedder              = None
     reranker              = None
     reranker_model_name: Optional[str] = None
-    # Generation
-    gen_pipeline          = None   # local HF pipeline (Qwen2.5-3B-Instruct)
+    gen_model             = None
+    gen_tokenizer         = None
     gen_model_name: str   = ""
-    gen_mode: str         = "none" # "local" | "groq" | "none"
-    # Retrieval indexes
+    gen_mode: str         = "none"
     documents: List[Dict] = []
     faiss_index           = None
     doc_embeddings: Optional[np.ndarray] = None
@@ -922,9 +935,9 @@ async def full_retrieval(query: str, k: int = TOP_K_FINAL) -> List[Dict]:
             if key not in existing:
                 fused.append({**d, "rrf_score": 0.0, "kg_injected": True})
 
-    routed          = await asyncio.to_thread(_filter_by_domain, fused, query, domains)
+    routed           = await asyncio.to_thread(_filter_by_domain, fused, query, domains)
     query_for_rerank = normalize_query(query)
-    reranked        = await asyncio.to_thread(
+    reranked         = await asyncio.to_thread(
         rerank,
         query_for_rerank,
         routed[: max(RERANK_TOP_N * 2, 14)],
@@ -997,8 +1010,7 @@ def extract_structured_answer(query: str, lang: str, docs: List[Dict]) -> Option
     return {"answer": answer, "intent": intent, "used_extraction": True, "evidence_lines": evidence}
 
 # ─────────────────────────────────────────────
-# GENERATION — Qwen2.5-3B-Instruct (local, ≤4B)
-#              with Groq llama-3.2-3b-preview fallback
+# GENERATION
 # ─────────────────────────────────────────────
 SYSTEM_PROMPT = (
     "You are EWU Assistant for East West University, Dhaka, Bangladesh. "
@@ -1043,52 +1055,77 @@ def _weak_evidence(results: List[Dict]) -> bool:
         return True
     return False
 
-# ── Local Qwen2.5 generation (sync, called via asyncio.to_thread) ─────────────
+# ── Local TinyLlama generation ────────────────────────────────────────────────
 def _generate_local_sync(query: str, context: str, lang: str) -> str:
-    """Run local Qwen2.5-3B-Instruct inference synchronously."""
-    messages = [
-        {
-            "role": "system",
-            "content": SYSTEM_PROMPT + "\n" + _lang_instruction(lang),
-        },
-        {
-            "role": "user",
-            "content": (
-                f"Context:\n{context[:GEN_PROMPT_MAX_CHARS]}\n\n"
-                f"Question: {query}"
-            ),
-        },
-    ]
-    try:
-        # HuggingFace text-generation pipeline with chat template
-        outputs = state.gen_pipeline(
-            messages,
-            max_new_tokens=GEN_MAX_NEW_TOKENS,
-            do_sample=False,        # greedy — deterministic, factual
-            temperature=None,
-            top_p=None,
-            pad_token_id=state.gen_pipeline.tokenizer.eos_token_id,
-        )
-        generated = outputs[0]["generated_text"]
+    """
+    Run TinyLlama-1.1B-Chat-v1.0 inference synchronously.
 
-        # pipeline returns the full conversation list; extract last assistant turn
-        if isinstance(generated, list):
-            assistant_turns = [m for m in generated if m.get("role") == "assistant"]
-            if assistant_turns:
-                return assistant_turns[-1]["content"].strip()
-            # fallback: last element's content
-            return generated[-1].get("content", "").strip()
+    TinyLlama uses the Zephyr/HF chat template:
+        <|system|>\\n{system}</s>\\n<|user|>\\n{user}</s>\\n<|assistant|>\\n
+    apply_chat_template() handles this automatically from the tokenizer config.
 
-        return str(generated).strip()
+    do_sample=True + low temperature keeps output factual while avoiding the
+    "generation flags not valid" warning caused by greedy + saved config mismatch.
+    """
+    import torch
 
-    except Exception as e:
-        logger.error("[ERROR] Local generation failed: %s", e)
+    model     = state.gen_model
+    tokenizer = state.gen_tokenizer
+    if model is None or tokenizer is None:
+        logger.error("[GEN] Model or tokenizer is None — skipping local generation.")
         return ""
 
-# ── Groq fallback (async) ─────────────────────────────────────────────────────
+    trimmed_ctx = context[:GEN_PROMPT_MAX_CHARS]
+
+    messages = [
+        {"role": "system", "content": SYSTEM_PROMPT + "\n" + _lang_instruction(lang)},
+        {"role": "user",   "content": f"Context:\n{trimmed_ctx}\n\nQuestion: {query}"},
+    ]
+
+    try:
+        text = tokenizer.apply_chat_template(
+            messages,
+            tokenize=False,
+            add_generation_prompt=True,
+        )
+        # Hard-cap input at 1600 tokens to leave headroom for output inside 2048-token window
+        inputs    = tokenizer(text, return_tensors="pt", truncation=True, max_length=1600)
+        device    = next(model.parameters()).device
+        inputs    = {k: v.to(device) for k, v in inputs.items()}
+        prompt_len = inputs["input_ids"].shape[-1]
+
+        logger.info("[GEN] TinyLlama prompt tokens: %d, max_new: %d", prompt_len, GEN_MAX_NEW_TOKENS)
+
+        with torch.inference_mode():
+            output_ids = model.generate(
+                **inputs,
+                max_new_tokens=GEN_MAX_NEW_TOKENS,
+                do_sample=True,
+                temperature=0.3,        # slightly warmer than near-greedy for coherence
+                top_p=0.9,
+                top_k=40,
+                repetition_penalty=1.15,
+                pad_token_id=tokenizer.eos_token_id,
+                eos_token_id=tokenizer.eos_token_id,
+            )
+
+        new_ids = output_ids[0][prompt_len:]
+        if len(new_ids) == 0:
+            logger.warning("[GEN] TinyLlama generated 0 new tokens.")
+            return ""
+
+        answer = tokenizer.decode(new_ids, skip_special_tokens=True).strip()
+        logger.info("[GEN] TinyLlama: %d tokens → %d chars", len(new_ids), len(answer))
+        return answer
+
+    except Exception as e:
+        logger.error("[GEN] TinyLlama local generation failed: %s", e, exc_info=True)
+        return ""
+
+# ── Groq fallback ─────────────────────────────────────────────────────────────
 async def _generate_groq(query: str, context: str, lang: str) -> str:
-    """Groq API fallback using llama-3.2-3b-preview (also ≤4B)."""
     if not GROQ_API_KEY:
+        logger.warning("[GEN] Groq requested but GROQ_API_KEY is not set.")
         return _context_fallback(lang)
 
     trimmed_ctx  = context[:GEN_PROMPT_MAX_CHARS]
@@ -1116,39 +1153,78 @@ async def _generate_groq(query: str, context: str, lang: str) -> str:
                     "temperature": 0.1,
                 },
             )
-            r.raise_for_status()
+
+            # FIX: log full body on non-200 so Groq's error reason is visible in logs
+            if r.status_code != 200:
+                logger.error(
+                    "[GEN] Groq HTTP %s — body: %s",
+                    r.status_code,
+                    r.text[:600],
+                )
+                return _context_fallback(lang)
+
             answer = r.json()["choices"][0]["message"]["content"].strip()
             return answer or _context_fallback(lang)
 
     except httpx.TimeoutException:
-        logger.error("[ERROR] Groq request timed out.")
+        logger.error("[GEN] Groq request timed out after %ds.", GROQ_TIMEOUT)
         return _context_fallback(lang)
     except Exception as e:
-        logger.error("[ERROR] Groq inference: %s", e)
+        logger.error("[GEN] Groq inference error: %s", e)
         return _context_fallback(lang)
 
-# ── Unified generate() — local first, Groq second ────────────────────────────
+# ── Unified generate() ────────────────────────────────────────────────────────
 async def generate(query: str, context: str, lang: str) -> str:
-    # 1. Try local Qwen2.5-3B-Instruct
-    if state.gen_pipeline is not None:
+    """
+    GEN_PREFER_GROQ=true  (default on CPU): Groq → TinyLlama → fallback text
+    GEN_PREFER_GROQ=false (GPU preferred):  TinyLlama → Groq → fallback text
+    """
+
+    async def _try_local() -> str:
+        if state.gen_model is None:
+            return ""
         try:
+            logger.info("[GEN] TinyLlama local: max_new=%d timeout=%ds",
+                        GEN_MAX_NEW_TOKENS, GEN_TIMEOUT_S)
             answer = await asyncio.wait_for(
                 asyncio.to_thread(_generate_local_sync, query, context, lang),
                 timeout=GEN_TIMEOUT_S,
             )
             if answer:
-                return answer
-            logger.warning("[GEN] Local model returned empty — trying Groq fallback.")
+                logger.info("[GEN] ✓ TinyLlama answered (%d chars).", len(answer))
+            else:
+                logger.warning("[GEN] TinyLlama returned empty string.")
+            return answer
         except asyncio.TimeoutError:
-            logger.error("[GEN] Local model timed out after %ss — trying Groq fallback.", GEN_TIMEOUT_S)
+            logger.error("[GEN] TinyLlama timed out after %ds.", GEN_TIMEOUT_S)
+            return ""
         except Exception as e:
-            logger.error("[GEN] Local model error: %s — trying Groq fallback.", e)
+            logger.error("[GEN] TinyLlama error: %s", e)
+            return ""
 
-    # 2. Groq fallback (llama-3.2-3b-preview, also ≤4B)
-    if GROQ_API_KEY:
-        logger.info("[GEN] Using Groq fallback (%s).", GROQ_FALLBACK_MODEL)
+    async def _try_groq() -> str:
+        if not GROQ_API_KEY:
+            logger.warning("[GEN] Groq requested but GROQ_API_KEY is not set.")
+            return ""
+        logger.info("[GEN] Using Groq (%s).", GROQ_FALLBACK_MODEL)
         return await _generate_groq(query, context, lang)
 
+    if GEN_PREFER_GROQ:
+        answer = await _try_groq()
+        if answer:
+            return answer
+        answer = await _try_local()
+        if answer:
+            return answer
+    else:
+        answer = await _try_local()
+        if answer:
+            return answer
+        answer = await _try_groq()
+        if answer:
+            return answer
+
+    logger.error("[GEN] All backends failed — returning static fallback.")
     return _context_fallback(lang)
 
 # ─────────────────────────────────────────────
@@ -1156,40 +1232,26 @@ async def generate(query: str, context: str, lang: str) -> str:
 # ─────────────────────────────────────────────
 def _load_gen_model():
     """
-    Load Qwen/Qwen2.5-3B-Instruct for local inference.
-    Supports:
-      - CPU (fp32, default)
-      - CUDA with optional 4-bit quantization via bitsandbytes
-      - Apple MPS (fp16)
-    Returns a HuggingFace text-generation pipeline or None on failure.
+    Load TinyLlama/TinyLlama-1.1B-Chat-v1.0.
+    Returns (model, tokenizer) or (None, None) on failure.
     """
     try:
         import torch
-        from transformers import (
-            AutoTokenizer,
-            AutoModelForCausalLM,
-            pipeline as hf_pipeline,
-        )
+        from transformers import AutoTokenizer, AutoModelForCausalLM
 
-        logger.info(
-            "[GEN] Loading local SLM: %s  device=%s  4bit=%s",
-            LOCAL_GEN_MODEL, GEN_DEVICE, GEN_LOAD_IN_4BIT,
-        )
+        logger.info("[GEN] Loading local SLM: %s  device=%s  4bit=%s",
+                    LOCAL_GEN_MODEL, GEN_DEVICE, GEN_LOAD_IN_4BIT)
 
-        # ── dtype & device ────────────────────────────────────────────────────
-        if GEN_DEVICE == "cpu":
-            torch_dtype = torch.float32
-            device_map  = None
-        elif GEN_DEVICE == "mps":
-            torch_dtype = torch.float16
-            device_map  = None
-        else:
-            # cuda or "auto"
-            torch_dtype = torch.float16
-            device_map  = "auto"
+        torch_dtype = torch.float32 if GEN_DEVICE == "cpu" else torch.float16
 
-        # ── optional 4-bit quantization (GPU only) ────────────────────────────
-        model_kwargs: Dict[str, Any] = {"torch_dtype": torch_dtype, "trust_remote_code": True}
+        model_kwargs: Dict[str, Any] = {
+            "torch_dtype":       torch_dtype,
+            "trust_remote_code": True,
+            "low_cpu_mem_usage": True,
+        }
+
+        if GEN_DEVICE not in ("cpu", "mps"):
+            model_kwargs["device_map"] = "auto"
 
         if GEN_LOAD_IN_4BIT and GEN_DEVICE not in ("cpu", "mps"):
             try:
@@ -1200,49 +1262,26 @@ def _load_gen_model():
                     bnb_4bit_use_double_quant=True,
                     bnb_4bit_quant_type="nf4",
                 )
-                model_kwargs["device_map"] = "auto"
                 logger.info("[GEN] 4-bit quantization enabled.")
             except ImportError:
-                logger.warning("[GEN] bitsandbytes not installed — skipping 4-bit quantization.")
+                logger.warning("[GEN] bitsandbytes not installed — skipping 4-bit.")
 
-        if device_map and "device_map" not in model_kwargs:
-            model_kwargs["device_map"] = device_map
+        tokenizer = AutoTokenizer.from_pretrained(LOCAL_GEN_MODEL, trust_remote_code=True)
+        model     = AutoModelForCausalLM.from_pretrained(LOCAL_GEN_MODEL, **model_kwargs)
 
-        # ── load tokenizer + model ────────────────────────────────────────────
-        tokenizer = AutoTokenizer.from_pretrained(
-            LOCAL_GEN_MODEL,
-            trust_remote_code=True,
-        )
-        model = AutoModelForCausalLM.from_pretrained(
-            LOCAL_GEN_MODEL,
-            **model_kwargs,
-        )
-
-        if GEN_DEVICE not in ("cpu",) and "device_map" not in model_kwargs:
+        if "device_map" not in model_kwargs:
             model = model.to(GEN_DEVICE)
-        elif GEN_DEVICE == "cpu":
-            model = model.to("cpu")
 
         model.eval()
-
-        # ── wrap in pipeline ──────────────────────────────────────────────────
-        pipe = hf_pipeline(
-            "text-generation",
-            model=model,
-            tokenizer=tokenizer,
-            device_map=model_kwargs.get("device_map"),
-        )
-
-        logger.info("[GEN] ✓ Local SLM ready: %s", LOCAL_GEN_MODEL)
-        return pipe
+        logger.info("[GEN] ✓ TinyLlama ready on %s.", GEN_DEVICE)
+        return model, tokenizer
 
     except Exception as e:
-        logger.error("[ERROR] Could not load local gen model (%s): %s", LOCAL_GEN_MODEL, e)
-        return None
+        logger.error("[GEN] Could not load local gen model (%s): %s", LOCAL_GEN_MODEL, e)
+        return None, None
 
 
 def _load_retrieval_models():
-    """Load embedding + reranker models (CPU only)."""
     emb, reranker, reranker_name = None, None, None
     if ST_OK:
         try:
@@ -1272,31 +1311,28 @@ async def _boot():
     try:
         logger.info("=== BOOT: EWU RAG (local SLM=%s, device=%s) ===", LOCAL_GEN_MODEL, GEN_DEVICE)
 
-        # Load retrieval models (always CPU)
         emb, reranker, reranker_name = await asyncio.to_thread(_load_retrieval_models)
         state.embedder            = emb
         state.reranker            = reranker
         state.reranker_model_name = reranker_name
 
-        # Load local SLM (Qwen2.5-3B-Instruct)
-        gen_pipe = await asyncio.to_thread(_load_gen_model)
-        if gen_pipe is not None:
-            state.gen_pipeline  = gen_pipe
+        gen_model, gen_tokenizer = await asyncio.to_thread(_load_gen_model)
+        if gen_model is not None:
+            state.gen_model      = gen_model
+            state.gen_tokenizer  = gen_tokenizer
             state.gen_model_name = LOCAL_GEN_MODEL
-            state.gen_mode       = "local"
-            logger.info("[GEN] Mode: local (%s)", LOCAL_GEN_MODEL)
+            state.gen_mode       = "groq+local" if (GEN_PREFER_GROQ and GROQ_API_KEY) else "local"
+            logger.info("[GEN] TinyLlama loaded. prefer_groq=%s  device=%s  "
+                        "max_new_tokens=%d  timeout=%ds",
+                        GEN_PREFER_GROQ, GEN_DEVICE, GEN_MAX_NEW_TOKENS, GEN_TIMEOUT_S)
         elif GROQ_API_KEY:
             state.gen_mode       = "groq"
             state.gen_model_name = GROQ_FALLBACK_MODEL
-            logger.warning(
-                "[GEN] Local model unavailable — Groq fallback active (%s).",
-                GROQ_FALLBACK_MODEL,
-            )
+            logger.warning("[GEN] Local model unavailable — Groq-only mode (%s).", GROQ_FALLBACK_MODEL)
         else:
             state.gen_mode = "none"
             logger.warning("[GEN] No local model AND no GROQ_API_KEY — answers will be fallback text.")
 
-        # Load or build retrieval indexes
         cache_ok = (
             _cache_fresh("documents.pkl")
             and _cache_fresh("faiss.index")
@@ -1347,13 +1383,33 @@ async def lifespan(app: FastAPI):
 # APP + ENDPOINTS
 # ─────────────────────────────────────────────
 app = FastAPI(
-    title="EWU RAG Server (Qwen2.5-3B-Instruct local + Groq fallback)",
+    title="EWU RAG Server (TinyLlama-1.1B-Chat local + Groq fallback)",
     lifespan=lifespan,
 )
 
 class Query(BaseModel):
     query: str
     top_k: int = TOP_K_FINAL
+
+
+@app.get("/")
+async def root():
+    return JSONResponse(
+        status_code=200,
+        content={
+            "service":     "EWU RAG Server",
+            "status":      "ready" if state.ready else ("error" if state.error else "loading"),
+            "docs_loaded": len(state.documents),
+            "gen_mode":    state.gen_mode,
+            "gen_model":   state.gen_model_name,
+            "endpoints": {
+                "POST /rag":   "Submit a question, get an answer",
+                "GET /health": "Detailed health / model status",
+                "GET /":       "This overview",
+            },
+            "hint": "POST to /rag with JSON body: {\"query\": \"your question\"}",
+        },
+    )
 
 
 @app.post("/rag")
@@ -1422,9 +1478,12 @@ async def health():
         "status":                  "ready" if state.ready else ("error" if state.error else "loading"),
         "docs":                    len(state.documents),
         "retrieval_device":        DEVICE,
-        "gen_mode":                state.gen_mode,          # "local" | "groq" | "none"
+        "gen_mode":                state.gen_mode,
         "gen_model":               state.gen_model_name,
         "gen_device":              GEN_DEVICE,
+        "gen_prefer_groq":         GEN_PREFER_GROQ,
+        "gen_max_new_tokens":      GEN_MAX_NEW_TOKENS,
+        "gen_timeout_s":           GEN_TIMEOUT_S,
         "local_gen_model":         LOCAL_GEN_MODEL,
         "embed_model":             EMBED_MODEL,
         "reranker_model":          state.reranker_model_name,
@@ -1435,7 +1494,7 @@ async def health():
         "faiss":                   state.faiss_index is not None,
         "bm25":                    state.bm25 is not None,
         "reranker":                state.reranker is not None,
-        "local_pipeline_loaded":   state.gen_pipeline is not None,
+        "local_pipeline_loaded":   state.gen_model is not None,
         "error":                   state.error or None,
     })
 
