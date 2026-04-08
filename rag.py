@@ -1321,7 +1321,7 @@ async def _boot():
         logger.info("Building indexes…")
         await asyncio.to_thread(build_indexes_from_scratch)
         state.ready = True
-        logger.info("✓ EWU RAG stack fully ready.")
+        logger.info("EWU RAG stack fully ready.")
 
     except Exception as e:
         state.error = str(e)
