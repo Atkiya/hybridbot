@@ -18,9 +18,7 @@ from pydantic import BaseModel
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
 
-# ─────────────────────────────────────────────
 # OPTIONAL DEPS
-# ─────────────────────────────────────────────
 try:
     import faiss
     FAISS_OK = True
@@ -52,46 +50,37 @@ except ImportError:
     LANGDETECT_OK = False
     logger.warning("[WARN] langdetect not installed — Banglish detection will be limited.")
 
-# ─────────────────────────────────────────────
-# DEVICE: CPU ONLY (retrieval models only)
-# ─────────────────────────────────────────────
+
 DEVICE = "cpu"
 
-# ─────────────────────────────────────────────
 # CONFIG
-# ─────────────────────────────────────────────
 API_BASE    = os.getenv("API_BASE",    "https://ewu-server.onrender.com/api")
-API_KEY     = os.getenv("API_KEY",     "i6EDytaX4E2jI6GvZQc0b1RSZHTI5_wVRa2rfL7rLpk")
+API_KEY     = os.getenv("API_KEY",     "")
 API_HEADERS = {"x-api-key": API_KEY}
 GITHUB_BASE = os.getenv("GITHUB_BASE", "https://raw.githubusercontent.com/Atkiya/jsonfiles/main/")
 
-# ── FIX: Switched from Qwen2.5-3B to TinyLlama-1.1B-Chat ────────────────────
-# TinyLlama is ~3x faster on CPU (1.1B params vs 3B), needs less RAM,
-# and follows chat templates correctly via its built-in tokenizer config.
+
 LOCAL_GEN_MODEL  = os.getenv("LOCAL_GEN_MODEL",  "TinyLlama/TinyLlama-1.1B-Chat-v1.0")
 GEN_DEVICE       = os.getenv("GEN_DEVICE",       "cpu")
 GEN_LOAD_IN_4BIT = os.getenv("GEN_LOAD_IN_4BIT", "false").lower() == "true"
 
-# TinyLlama on CPU: ~8-15 tok/s → 256 tokens ≈ 17-32 s — well within budget.
+
 _CPU_MAX_NEW_TOKENS = 256
 _DEFAULT_MAX_TOKENS = _CPU_MAX_NEW_TOKENS if GEN_DEVICE == "cpu" else 700
 GEN_MAX_NEW_TOKENS  = int(os.getenv("GEN_MAX_NEW_TOKENS", str(_DEFAULT_MAX_TOKENS)))
 
-# TinyLlama context window = 2048 tokens.
-# ~3500 chars ≈ ~900 tokens → leaves ~900 tokens for new output after overhead.
 GEN_PROMPT_MAX_CHARS = int(os.getenv("GEN_PROMPT_MAX_CHARS", "3500"))
 
-_CPU_TIMEOUT  = max(60, GEN_MAX_NEW_TOKENS * 2)   # 2 s/tok worst-case on slow CPU
+_CPU_TIMEOUT  = max(60, GEN_MAX_NEW_TOKENS * 2)   
 GEN_TIMEOUT_S = int(os.getenv("GEN_TIMEOUT_S", str(_CPU_TIMEOUT if GEN_DEVICE == "cpu" else 90)))
 
-# ── FIX: llama-3.2-3b-preview is DEPRECATED on Groq — causes HTTP 400 ────────
-# Replaced with llama-3.1-8b-instant: fast, free-tier, actively supported.
+
 GROQ_API_KEY        = os.getenv("GROQ_API_KEY", "")
 GROQ_FALLBACK_MODEL = os.getenv("GROQ_FALLBACK_MODEL", "llama-3.1-8b-instant")
 GROQ_MAX_TOKENS     = int(os.getenv("GROQ_MAX_TOKENS",  "700"))
 GROQ_TIMEOUT        = int(os.getenv("GROQ_TIMEOUT",     "60"))
 
-# Prefer Groq on CPU (fast API call beats slow local inference).
+
 _default_prefer_groq = "true" if GEN_DEVICE == "cpu" else "false"
 GEN_PREFER_GROQ = os.getenv("GEN_PREFER_GROQ", _default_prefer_groq).lower() == "true"
 
@@ -109,12 +98,10 @@ CACHE_DIR        = os.getenv("CACHE_DIR",            "./cache")
 CACHE_TTL_H      = int(os.getenv("CACHE_TTL_H",      "24"))
 API_FAIL_LIMIT   = int(os.getenv("API_FAIL_LIMIT",   "3"))
 
-# Bumped so stale Qwen-era pickle files are not reused
+
 CACHE_VERSION = "v8_tinyllama"
 
-# ─────────────────────────────────────────────
 # API ENDPOINTS
-# ─────────────────────────────────────────────
 API_LIST_ENDPOINTS = [
     ("admission-deadlines",  "Admission Deadlines",     {}),
     ("academic-calendar",    "Academic Calendar",       {}),
@@ -240,9 +227,7 @@ FIELD_PRIORITY = [
 
 EXACT_INTENTS = {"deadline","fee","credit","course_count","email","phone","location","contact"}
 
-# ─────────────────────────────────────────────
 # APP STATE
-# ─────────────────────────────────────────────
 class AppState:
     embedder              = None
     reranker              = None
@@ -265,9 +250,7 @@ state = AppState()
 _api_fail_count: Dict[str, int] = {}
 os.makedirs(CACHE_DIR, exist_ok=True)
 
-# ─────────────────────────────────────────────
 # CACHE HELPERS
-# ─────────────────────────────────────────────
 def _cp(name: str) -> str:
     return os.path.join(CACHE_DIR, f"{CACHE_VERSION}_{name}")
 
@@ -314,9 +297,7 @@ def _load_faiss():
     except Exception:
         return None
 
-# ─────────────────────────────────────────────
 # LANGUAGE + NORMALIZATION
-# ─────────────────────────────────────────────
 _BANGLA_UNICODE_MIN = 0x0980
 _BANGLA_UNICODE_MAX = 0x09FF
 
@@ -405,9 +386,7 @@ def tokenize_for_sparse(text: str) -> List[str]:
     toks = [t for t in re.findall(r"[\w\u0980-\u09FF]+", norm) if len(t) > 1]
     return toks
 
-# ─────────────────────────────────────────────
 # FETCHING
-# ─────────────────────────────────────────────
 async def fetch_json(url: str, headers: dict = None, params: dict = None, timeout: int = 60):
     key = url.split("?")[0]
     if _api_fail_count.get(key, 0) >= API_FAIL_LIMIT:
@@ -537,9 +516,7 @@ async def load_github() -> list:
     logger.info("[GitHub] total raw docs: %s", len(docs))
     return docs
 
-# ─────────────────────────────────────────────
 # CHUNKING
-# ─────────────────────────────────────────────
 def _flatten_json(obj, path="", sep=" > ") -> List[Tuple[str, str]]:
     lines: List[Tuple[str, str]] = []
     if isinstance(obj, dict):
@@ -612,9 +589,7 @@ def chunk_documents(docs: List[Dict]) -> List[Dict]:
         out.append({"content": text, "source": source, "source_tags": doc.get("source_tags", []), "meta": meta})
     return out
 
-# ─────────────────────────────────────────────
 # KNOWLEDGE GRAPH
-# ─────────────────────────────────────────────
 _STOP = set(string.punctuation) | {
     "the","a","an","is","are","was","were","of","in","at","to","for",
     "and","or","not","this","that","it","its","with","as","by","on",
@@ -658,9 +633,7 @@ def kg_search(query: str, k: int = 5) -> List[int]:
                     scores[ci] = scores.get(ci, 0) + 1
     return sorted(scores, key=scores.get, reverse=True)[:k]
 
-# ─────────────────────────────────────────────
 # INDEXING
-# ─────────────────────────────────────────────
 def build_indexes_from_scratch() -> bool:
     if not state.documents:
         logger.warning("[WARN] No documents to index.")
@@ -736,9 +709,7 @@ def load_indexes_from_cache() -> bool:
 
     return bool(state.documents) and (state.faiss_index is not None or state.bm25 is not None)
 
-# ─────────────────────────────────────────────
-# QUERY INTENT / DOMAIN ROUTING
-# ─────────────────────────────────────────────
+
 def detect_intent(query: str) -> str:
     q      = normalize_query(query)
     toks   = set(tokenize_for_sparse(q))
@@ -779,9 +750,7 @@ def candidate_weight_for_query(doc: Dict, query: str, domains: List[str]) -> flo
         score += 0.75
     return score
 
-# ─────────────────────────────────────────────
 # RETRIEVAL
-# ─────────────────────────────────────────────
 def _encode_query(query: str) -> np.ndarray:
     return np.array(
         state.embedder.encode([f"query: {query}"], normalize_embeddings=True),
@@ -949,9 +918,7 @@ async def full_retrieval(query: str, k: int = TOP_K_FINAL) -> List[Dict]:
         return await asyncio.to_thread(mmr_select, q_vec, reranked, k)
     return reranked[:k]
 
-# ─────────────────────────────────────────────
 # EXACT ANSWER EXTRACTION
-# ─────────────────────────────────────────────
 def _best_matching_lines(doc: Dict, keywords: List[str], max_lines: int = 3) -> List[str]:
     all_lines = doc.get("meta", {}).get("all_lines", [])
     scored    = []
@@ -1009,9 +976,7 @@ def extract_structured_answer(query: str, lang: str, docs: List[Dict]) -> Option
     answer = lead + "\n- " + "\n- ".join(evidence)
     return {"answer": answer, "intent": intent, "used_extraction": True, "evidence_lines": evidence}
 
-# ─────────────────────────────────────────────
 # GENERATION
-# ─────────────────────────────────────────────
 SYSTEM_PROMPT = (
     "You are EWU Assistant for East West University, Dhaka, Bangladesh. "
     "Answer based on the provided context. Use the most relevant facts from it. "
@@ -1055,7 +1020,7 @@ def _weak_evidence(results: List[Dict]) -> bool:
         return True
     return False
 
-# ── Local TinyLlama generation ────────────────────────────────────────────────
+# Local TinyLlama generation 
 def _generate_local_sync(query: str, context: str, lang: str) -> str:
     """
     Run TinyLlama-1.1B-Chat-v1.0 inference synchronously.
@@ -1088,7 +1053,7 @@ def _generate_local_sync(query: str, context: str, lang: str) -> str:
             tokenize=False,
             add_generation_prompt=True,
         )
-        # Hard-cap input at 1600 tokens to leave headroom for output inside 2048-token window
+       
         inputs    = tokenizer(text, return_tensors="pt", truncation=True, max_length=1600)
         device    = next(model.parameters()).device
         inputs    = {k: v.to(device) for k, v in inputs.items()}
@@ -1101,7 +1066,7 @@ def _generate_local_sync(query: str, context: str, lang: str) -> str:
                 **inputs,
                 max_new_tokens=GEN_MAX_NEW_TOKENS,
                 do_sample=True,
-                temperature=0.3,        # slightly warmer than near-greedy for coherence
+                temperature=0.3,        
                 top_p=0.9,
                 top_k=40,
                 repetition_penalty=1.15,
@@ -1122,7 +1087,7 @@ def _generate_local_sync(query: str, context: str, lang: str) -> str:
         logger.error("[GEN] TinyLlama local generation failed: %s", e, exc_info=True)
         return ""
 
-# ── Groq fallback ─────────────────────────────────────────────────────────────
+#fallback Groq generation (used when local model is unavailable or slow)
 async def _generate_groq(query: str, context: str, lang: str) -> str:
     if not GROQ_API_KEY:
         logger.warning("[GEN] Groq requested but GROQ_API_KEY is not set.")
@@ -1154,7 +1119,7 @@ async def _generate_groq(query: str, context: str, lang: str) -> str:
                 },
             )
 
-            # FIX: log full body on non-200 so Groq's error reason is visible in logs
+           
             if r.status_code != 200:
                 logger.error(
                     "[GEN] Groq HTTP %s — body: %s",
@@ -1173,7 +1138,7 @@ async def _generate_groq(query: str, context: str, lang: str) -> str:
         logger.error("[GEN] Groq inference error: %s", e)
         return _context_fallback(lang)
 
-# ── Unified generate() ────────────────────────────────────────────────────────
+
 async def generate(query: str, context: str, lang: str) -> str:
     """
     GEN_PREFER_GROQ=true  (default on CPU): Groq → TinyLlama → fallback text
@@ -1227,9 +1192,7 @@ async def generate(query: str, context: str, lang: str) -> str:
     logger.error("[GEN] All backends failed — returning static fallback.")
     return _context_fallback(lang)
 
-# ─────────────────────────────────────────────
 # MODEL LOADING
-# ─────────────────────────────────────────────
 def _load_gen_model():
     """
     Load TinyLlama/TinyLlama-1.1B-Chat-v1.0.
@@ -1304,9 +1267,7 @@ def _load_retrieval_models():
                 logger.warning("[WARN] Reranker %s unavailable: %s", model_name, e)
     return emb, reranker, reranker_name
 
-# ─────────────────────────────────────────────
 # BOOT
-# ─────────────────────────────────────────────
 async def _boot():
     try:
         logger.info("=== BOOT: EWU RAG (local SLM=%s, device=%s) ===", LOCAL_GEN_MODEL, GEN_DEVICE)
@@ -1379,9 +1340,7 @@ async def lifespan(app: FastAPI):
         except asyncio.CancelledError:
             pass
 
-# ─────────────────────────────────────────────
 # APP + ENDPOINTS
-# ─────────────────────────────────────────────
 app = FastAPI(
     title="EWU RAG Server (TinyLlama-1.1B-Chat local + Groq fallback)",
     lifespan=lifespan,
