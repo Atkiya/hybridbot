@@ -2566,7 +2566,7 @@ class ActionDefaultFallback(Action):
         return "action_default_fallback"
 
     def __init__(self):
-        self.rag_url = "https://atkiya110-rag-server.hf.space/rag"
+        self.rag_url = "http://127.0.0.1:8000/rag"
         self.timeout = 120
         self.max_retries = 1
         self._router = _build_router()
