@@ -19,7 +19,7 @@ def embed_query(text: str) -> list:
 
 
 API_BASE_URL = "https://ewu-server.onrender.com/api"
-API_KEY      = "i6EDytaX4E2jI6GvZQc0b1RSZHTI5_wVRa2rfL7rLpk"
+API_KEY      = ""
 HEADERS      = {"x-api-key": API_KEY}
 
 GITHUB_RAW_BASE = "https://raw.githubusercontent.com/Atkiya/jsonfiles/main"
