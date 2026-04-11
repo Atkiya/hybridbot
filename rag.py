@@ -18,7 +18,9 @@ from pydantic import BaseModel
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
 logger = logging.getLogger(__name__)
 
+
 # OPTIONAL DEPS
+
 try:
     import faiss
     FAISS_OK = True
@@ -53,55 +55,59 @@ except ImportError:
 
 DEVICE = "cpu"
 
+
 # CONFIG
-API_BASE    = os.getenv("API_BASE",    "https://ewu-server.onrender.com/api")
-API_KEY     = os.getenv("API_KEY",     "")
-API_HEADERS = {"x-api-key": API_KEY}
-GITHUB_BASE = os.getenv("GITHUB_BASE", "https://raw.githubusercontent.com/Atkiya/jsonfiles/main/")
+
+LOCAL_GEN_MODEL     = os.getenv("LOCAL_GEN_MODEL",  "TinyLlama/TinyLlama-1.1B-Chat-v1.0")
+GEN_DEVICE          = os.getenv("GEN_DEVICE",        "cpu")
+GEN_LOAD_IN_4BIT    = os.getenv("GEN_LOAD_IN_4BIT",  "false").lower() == "true"
 
 
-LOCAL_GEN_MODEL  = os.getenv("LOCAL_GEN_MODEL",  "TinyLlama/TinyLlama-1.1B-Chat-v1.0")
-GEN_DEVICE       = os.getenv("GEN_DEVICE",       "cpu")
-GEN_LOAD_IN_4BIT = os.getenv("GEN_LOAD_IN_4BIT", "false").lower() == "true"
+HF_API_TOKEN        = os.getenv("HF_API_TOKEN", "")
+HF_API_URL          = (
+    "https://api-inference.huggingface.co/models/"
+    + LOCAL_GEN_MODEL
+)
+HF_API_TIMEOUT      = int(os.getenv("HF_API_TIMEOUT",    "30"))
+HF_MAX_NEW_TOKENS   = int(os.getenv("HF_MAX_NEW_TOKENS",  "400"))
 
 
 _CPU_MAX_NEW_TOKENS = 256
-_DEFAULT_MAX_TOKENS = _CPU_MAX_NEW_TOKENS if GEN_DEVICE == "cpu" else 700
-GEN_MAX_NEW_TOKENS  = int(os.getenv("GEN_MAX_NEW_TOKENS", str(_DEFAULT_MAX_TOKENS)))
-
-GEN_PROMPT_MAX_CHARS = int(os.getenv("GEN_PROMPT_MAX_CHARS", "3500"))
-
-_CPU_TIMEOUT  = max(60, GEN_MAX_NEW_TOKENS * 2)   
-GEN_TIMEOUT_S = int(os.getenv("GEN_TIMEOUT_S", str(_CPU_TIMEOUT if GEN_DEVICE == "cpu" else 90)))
-
-
-GROQ_API_KEY        = os.getenv("GROQ_API_KEY", "")
-GROQ_FALLBACK_MODEL = os.getenv("GROQ_FALLBACK_MODEL", "llama-3.1-8b-instant")
-GROQ_MAX_TOKENS     = int(os.getenv("GROQ_MAX_TOKENS",  "700"))
-GROQ_TIMEOUT        = int(os.getenv("GROQ_TIMEOUT",     "60"))
-
-
-_default_prefer_groq = "true" if GEN_DEVICE == "cpu" else "false"
-GEN_PREFER_GROQ = os.getenv("GEN_PREFER_GROQ", _default_prefer_groq).lower() == "true"
+GEN_MAX_NEW_TOKENS  = int(os.getenv("GEN_MAX_NEW_TOKENS", str(_CPU_MAX_NEW_TOKENS)))
+GEN_PROMPT_MAX_CHARS= int(os.getenv("GEN_PROMPT_MAX_CHARS", "3500"))
+_CPU_TIMEOUT        = max(60, GEN_MAX_NEW_TOKENS * 2)
+GEN_TIMEOUT_S       = int(os.getenv("GEN_TIMEOUT_S", str(_CPU_TIMEOUT)))
 
 EMBED_MODEL           = os.getenv("EMBED_MODEL",           "intfloat/multilingual-e5-small")
 PRIMARY_RERANK_MODEL  = os.getenv("PRIMARY_RERANK_MODEL",  "BAAI/bge-reranker-v2-m3")
 FALLBACK_RERANK_MODEL = os.getenv("FALLBACK_RERANK_MODEL", "cross-encoder/ms-marco-MiniLM-L-6-v2")
 
-CHUNK_SIZE       = int(os.getenv("CHUNK_SIZE",       "560"))
-TOP_K_RETRIEVE   = int(os.getenv("TOP_K_RETRIEVE",   "18"))
-TOP_K_FINAL      = int(os.getenv("TOP_K_FINAL",      "6"))
-RERANK_TOP_N     = int(os.getenv("RERANK_TOP_N",     "12"))
+CHUNK_SIZE       = int(os.getenv("CHUNK_SIZE",        "560"))
+TOP_K_RETRIEVE   = int(os.getenv("TOP_K_RETRIEVE",    "18"))
+TOP_K_FINAL      = int(os.getenv("TOP_K_FINAL",       "6"))
+RERANK_TOP_N     = int(os.getenv("RERANK_TOP_N",      "12"))
 RERANK_MIN_SCORE = float(os.getenv("RERANK_MIN_SCORE", "-2.5"))
-MMR_LAMBDA       = float(os.getenv("MMR_LAMBDA",     "0.75"))
-CACHE_DIR        = os.getenv("CACHE_DIR",            "./cache")
-CACHE_TTL_H      = int(os.getenv("CACHE_TTL_H",      "24"))
-API_FAIL_LIMIT   = int(os.getenv("API_FAIL_LIMIT",   "3"))
-
+MMR_LAMBDA       = float(os.getenv("MMR_LAMBDA",      "0.75"))
+CACHE_DIR        = os.getenv("CACHE_DIR",             "./cache")
+CACHE_TTL_H      = int(os.getenv("CACHE_TTL_H",       "24"))
+API_FAIL_LIMIT   = int(os.getenv("API_FAIL_LIMIT",    "3"))
 
 CACHE_VERSION = "v8_tinyllama"
 
+
+
+API_BASE    = os.getenv("API_BASE",    "https://ewu-server.onrender.com/api")
+API_KEY     = os.getenv("API_KEY",     "")
+API_HEADERS = {"Authorization": f"Bearer {API_KEY}"} if API_KEY else {}
+GITHUB_BASE = os.getenv(
+    "GITHUB_BASE",
+    "https://raw.githubusercontent.com/Atkiya/jsonfiles/main/",
+)
+
+
+
 # API ENDPOINTS
+
 API_LIST_ENDPOINTS = [
     ("admission-deadlines",  "Admission Deadlines",     {}),
     ("academic-calendar",    "Academic Calendar",       {}),
@@ -227,7 +233,9 @@ FIELD_PRIORITY = [
 
 EXACT_INTENTS = {"deadline","fee","credit","course_count","email","phone","location","contact"}
 
-# APP STATE
+
+
+
 class AppState:
     embedder              = None
     reranker              = None
@@ -235,7 +243,7 @@ class AppState:
     gen_model             = None
     gen_tokenizer         = None
     gen_model_name: str   = ""
-    gen_mode: str         = "none"
+    gen_mode: str         = "none"   
     documents: List[Dict] = []
     faiss_index           = None
     doc_embeddings: Optional[np.ndarray] = None
@@ -250,7 +258,9 @@ state = AppState()
 _api_fail_count: Dict[str, int] = {}
 os.makedirs(CACHE_DIR, exist_ok=True)
 
-# CACHE HELPERS
+
+
+
 def _cp(name: str) -> str:
     return os.path.join(CACHE_DIR, f"{CACHE_VERSION}_{name}")
 
@@ -297,7 +307,9 @@ def _load_faiss():
     except Exception:
         return None
 
-# LANGUAGE + NORMALIZATION
+
+
+
 _BANGLA_UNICODE_MIN = 0x0980
 _BANGLA_UNICODE_MAX = 0x09FF
 
@@ -386,7 +398,9 @@ def tokenize_for_sparse(text: str) -> List[str]:
     toks = [t for t in re.findall(r"[\w\u0980-\u09FF]+", norm) if len(t) > 1]
     return toks
 
+
 # FETCHING
+
 async def fetch_json(url: str, headers: dict = None, params: dict = None, timeout: int = 60):
     key = url.split("?")[0]
     if _api_fail_count.get(key, 0) >= API_FAIL_LIMIT:
@@ -420,7 +434,7 @@ async def _wake_api_server():
     for attempt in range(3):
         result = await fetch_json(f"{API_BASE}/grade-scale", API_HEADERS, timeout=60)
         if result is not None:
-            logger.info("[API] Server awake ✓")
+            logger.info("[API] Server awake ")
             return True
         logger.info("[API] Wake attempt %s/3 failed, retrying in 10 s…", attempt + 1)
         await asyncio.sleep(10)
@@ -516,7 +530,9 @@ async def load_github() -> list:
     logger.info("[GitHub] total raw docs: %s", len(docs))
     return docs
 
+
 # CHUNKING
+
 def _flatten_json(obj, path="", sep=" > ") -> List[Tuple[str, str]]:
     lines: List[Tuple[str, str]] = []
     if isinstance(obj, dict):
@@ -589,7 +605,9 @@ def chunk_documents(docs: List[Dict]) -> List[Dict]:
         out.append({"content": text, "source": source, "source_tags": doc.get("source_tags", []), "meta": meta})
     return out
 
+
 # KNOWLEDGE GRAPH
+
 _STOP = set(string.punctuation) | {
     "the","a","an","is","are","was","were","of","in","at","to","for",
     "and","or","not","this","that","it","its","with","as","by","on",
@@ -633,7 +651,9 @@ def kg_search(query: str, k: int = 5) -> List[int]:
                     scores[ci] = scores.get(ci, 0) + 1
     return sorted(scores, key=scores.get, reverse=True)[:k]
 
+
 # INDEXING
+
 def build_indexes_from_scratch() -> bool:
     if not state.documents:
         logger.warning("[WARN] No documents to index.")
@@ -710,6 +730,8 @@ def load_indexes_from_cache() -> bool:
     return bool(state.documents) and (state.faiss_index is not None or state.bm25 is not None)
 
 
+# QUERY INTENT / DOMAIN ROUTING
+
 def detect_intent(query: str) -> str:
     q      = normalize_query(query)
     toks   = set(tokenize_for_sparse(q))
@@ -750,7 +772,9 @@ def candidate_weight_for_query(doc: Dict, query: str, domains: List[str]) -> flo
         score += 0.75
     return score
 
+
 # RETRIEVAL
+
 def _encode_query(query: str) -> np.ndarray:
     return np.array(
         state.embedder.encode([f"query: {query}"], normalize_embeddings=True),
@@ -918,7 +942,9 @@ async def full_retrieval(query: str, k: int = TOP_K_FINAL) -> List[Dict]:
         return await asyncio.to_thread(mmr_select, q_vec, reranked, k)
     return reranked[:k]
 
+
 # EXACT ANSWER EXTRACTION
+
 def _best_matching_lines(doc: Dict, keywords: List[str], max_lines: int = 3) -> List[str]:
     all_lines = doc.get("meta", {}).get("all_lines", [])
     scored    = []
@@ -976,7 +1002,9 @@ def extract_structured_answer(query: str, lang: str, docs: List[Dict]) -> Option
     answer = lead + "\n- " + "\n- ".join(evidence)
     return {"answer": answer, "intent": intent, "used_extraction": True, "evidence_lines": evidence}
 
+
 # GENERATION
+
 SYSTEM_PROMPT = (
     "You are EWU Assistant for East West University, Dhaka, Bangladesh. "
     "Answer based on the provided context. Use the most relevant facts from it. "
@@ -1020,193 +1048,187 @@ def _weak_evidence(results: List[Dict]) -> bool:
         return True
     return False
 
-# Local TinyLlama generation 
+def _build_prompt(query: str, context: str, lang: str) -> str:
+    """
+    Build a TinyLlama chat-template prompt string.
+    Used by both the HF API path and the local path.
+    """
+    trimmed = context[:GEN_PROMPT_MAX_CHARS]
+    system  = SYSTEM_PROMPT + "\n" + _lang_instruction(lang)
+    user    = f"Context:\n{trimmed}\n\nQuestion: {query}"
+    # TinyLlama / Zephyr chat template
+    return (
+        f"<|system|>\n{system}</s>\n"
+        f"<|user|>\n{user}</s>\n"
+        f"<|assistant|>\n"
+    )
+
+# ── HuggingFace Inference API (primary — fastest on CPU host) ──────────────────
+async def _generate_hf_api(query: str, context: str, lang: str) -> str:
+    """
+    Call the HF Serverless Inference API for TinyLlama-1.1B-Chat-v1.0.
+    Free tier: ~1-2 s end-to-end, no local GPU needed.
+    Falls back gracefully when the model is cold-starting (503 → retry once).
+    """
+    if not HF_API_TOKEN:
+        logger.warning("[GEN] HF_API_TOKEN not set — skipping HF API.")
+        return ""
+
+    prompt = _build_prompt(query, context, lang)
+
+    payload = {
+        "inputs": prompt,
+        "parameters": {
+            "max_new_tokens":      HF_MAX_NEW_TOKENS,
+            "temperature":         0.3,
+            "top_p":               0.9,
+            "top_k":               40,
+            "repetition_penalty":  1.15,
+            "do_sample":           True,
+            "return_full_text":    False,
+        },
+    }
+    headers = {
+        "Authorization": f"Bearer {HF_API_TOKEN}",
+        "Content-Type":  "application/json",
+    }
+
+    async with httpx.AsyncClient(timeout=HF_API_TIMEOUT) as client:
+        for attempt in range(2):   # one retry for cold-start 503
+            try:
+                r = await client.post(HF_API_URL, headers=headers, json=payload)
+
+                if r.status_code == 200:
+                    data = r.json()
+                    # HF text-generation returns a list: [{"generated_text": "..."}]
+                    if isinstance(data, list) and data:
+                        answer = data[0].get("generated_text", "").strip()
+                        if answer:
+                            logger.info("[GEN] ✓ HF API answered (%d chars).", len(answer))
+                            return answer
+                    logger.warning("[GEN] HF API returned unexpected shape: %s", data)
+                    return ""
+
+                if r.status_code == 503 and attempt == 0:
+                    # Model is loading — wait and retry once
+                    wait = min(int(r.json().get("estimated_time", 20)), 30)
+                    logger.info("[GEN] HF model loading, waiting %ds…", wait)
+                    await asyncio.sleep(wait)
+                    continue
+
+                logger.error("[GEN] HF API HTTP %s — %s", r.status_code, r.text[:300])
+                return ""
+
+            except httpx.TimeoutException:
+                logger.error("[GEN] HF API timed out after %ds.", HF_API_TIMEOUT)
+                return ""
+            except Exception as e:
+                logger.error("[GEN] HF API error: %s", e)
+                return ""
+
+    return ""
+
+# ── Local TinyLlama (fallback — slower on CPU, but zero external dependency) ──
 def _generate_local_sync(query: str, context: str, lang: str) -> str:
     """
-    Run TinyLlama-1.1B-Chat-v1.0 inference synchronously.
-
-    TinyLlama uses the Zephyr/HF chat template:
-        <|system|>\\n{system}</s>\\n<|user|>\\n{user}</s>\\n<|assistant|>\\n
-    apply_chat_template() handles this automatically from the tokenizer config.
-
-    do_sample=True + low temperature keeps output factual while avoiding the
-    "generation flags not valid" warning caused by greedy + saved config mismatch.
+    Run TinyLlama-1.1B-Chat-v1.0 inference synchronously on CPU.
+    Only reached when HF_API_TOKEN is absent or HF API fails.
     """
     import torch
 
     model     = state.gen_model
     tokenizer = state.gen_tokenizer
     if model is None or tokenizer is None:
-        logger.error("[GEN] Model or tokenizer is None — skipping local generation.")
+        logger.error("[GEN] Local model/tokenizer not loaded.")
         return ""
-
-    trimmed_ctx = context[:GEN_PROMPT_MAX_CHARS]
 
     messages = [
         {"role": "system", "content": SYSTEM_PROMPT + "\n" + _lang_instruction(lang)},
-        {"role": "user",   "content": f"Context:\n{trimmed_ctx}\n\nQuestion: {query}"},
+        {"role": "user",   "content": f"Context:\n{context[:GEN_PROMPT_MAX_CHARS]}\n\nQuestion: {query}"},
     ]
 
     try:
-        text = tokenizer.apply_chat_template(
-            messages,
-            tokenize=False,
-            add_generation_prompt=True,
-        )
-       
+        text      = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
         inputs    = tokenizer(text, return_tensors="pt", truncation=True, max_length=1600)
         device    = next(model.parameters()).device
         inputs    = {k: v.to(device) for k, v in inputs.items()}
         prompt_len = inputs["input_ids"].shape[-1]
 
-        logger.info("[GEN] TinyLlama prompt tokens: %d, max_new: %d", prompt_len, GEN_MAX_NEW_TOKENS)
+        logger.info("[GEN] TinyLlama local: prompt_tokens=%d max_new=%d", prompt_len, GEN_MAX_NEW_TOKENS)
 
         with torch.inference_mode():
             output_ids = model.generate(
                 **inputs,
-                max_new_tokens=GEN_MAX_NEW_TOKENS,
-                do_sample=True,
-                temperature=0.3,        
-                top_p=0.9,
-                top_k=40,
-                repetition_penalty=1.15,
-                pad_token_id=tokenizer.eos_token_id,
-                eos_token_id=tokenizer.eos_token_id,
+                max_new_tokens     = GEN_MAX_NEW_TOKENS,
+                do_sample          = True,
+                temperature        = 0.3,
+                top_p              = 0.9,
+                top_k              = 40,
+                repetition_penalty = 1.15,
+                pad_token_id       = tokenizer.eos_token_id,
+                eos_token_id       = tokenizer.eos_token_id,
             )
 
         new_ids = output_ids[0][prompt_len:]
         if len(new_ids) == 0:
-            logger.warning("[GEN] TinyLlama generated 0 new tokens.")
+            logger.warning("[GEN] TinyLlama generated 0 tokens.")
             return ""
 
         answer = tokenizer.decode(new_ids, skip_special_tokens=True).strip()
-        logger.info("[GEN] TinyLlama: %d tokens → %d chars", len(new_ids), len(answer))
+        logger.info("[GEN] ✓ TinyLlama local: %d tokens → %d chars", len(new_ids), len(answer))
         return answer
 
     except Exception as e:
-        logger.error("[GEN] TinyLlama local generation failed: %s", e, exc_info=True)
+        logger.error("[GEN] TinyLlama local failed: %s", e, exc_info=True)
         return ""
-
-#fallback Groq generation (used when local model is unavailable or slow)
-async def _generate_groq(query: str, context: str, lang: str) -> str:
-    if not GROQ_API_KEY:
-        logger.warning("[GEN] Groq requested but GROQ_API_KEY is not set.")
-        return _context_fallback(lang)
-
-    trimmed_ctx  = context[:GEN_PROMPT_MAX_CHARS]
-    user_content = (
-        f"{_lang_instruction(lang)}\n\n"
-        f"Context:\n{trimmed_ctx}\n\n"
-        f"Question: {query}"
-    )
-
-    try:
-        async with httpx.AsyncClient(timeout=GROQ_TIMEOUT) as client:
-            r = await client.post(
-                "https://api.groq.com/openai/v1/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {GROQ_API_KEY}",
-                    "Content-Type": "application/json",
-                },
-                json={
-                    "model":       GROQ_FALLBACK_MODEL,
-                    "messages": [
-                        {"role": "system", "content": SYSTEM_PROMPT},
-                        {"role": "user",   "content": user_content},
-                    ],
-                    "max_tokens":  GROQ_MAX_TOKENS,
-                    "temperature": 0.1,
-                },
-            )
-
-           
-            if r.status_code != 200:
-                logger.error(
-                    "[GEN] Groq HTTP %s — body: %s",
-                    r.status_code,
-                    r.text[:600],
-                )
-                return _context_fallback(lang)
-
-            answer = r.json()["choices"][0]["message"]["content"].strip()
-            return answer or _context_fallback(lang)
-
-    except httpx.TimeoutException:
-        logger.error("[GEN] Groq request timed out after %ds.", GROQ_TIMEOUT)
-        return _context_fallback(lang)
-    except Exception as e:
-        logger.error("[GEN] Groq inference error: %s", e)
-        return _context_fallback(lang)
 
 
 async def generate(query: str, context: str, lang: str) -> str:
     """
-    GEN_PREFER_GROQ=true  (default on CPU): Groq → TinyLlama → fallback text
-    GEN_PREFER_GROQ=false (GPU preferred):  TinyLlama → Groq → fallback text
+    Priority order (both use TinyLlama-1.1B-Chat-v1.0):
+      1. HF Serverless Inference API  — ~1-2 s, needs HF_API_TOKEN
+      2. Local TinyLlama on CPU       — ~17-32 s, no token needed
+      3. Static fallback text
     """
+  
+    if HF_API_TOKEN:
+        answer = await _generate_hf_api(query, context, lang)
+        if answer:
+            return answer
+        logger.warning("[GEN] HF API failed — falling back to local TinyLlama.")
 
-    async def _try_local() -> str:
-        if state.gen_model is None:
-            return ""
+
+    if state.gen_model is not None:
         try:
-            logger.info("[GEN] TinyLlama local: max_new=%d timeout=%ds",
-                        GEN_MAX_NEW_TOKENS, GEN_TIMEOUT_S)
             answer = await asyncio.wait_for(
                 asyncio.to_thread(_generate_local_sync, query, context, lang),
                 timeout=GEN_TIMEOUT_S,
             )
             if answer:
-                logger.info("[GEN] ✓ TinyLlama answered (%d chars).", len(answer))
-            else:
-                logger.warning("[GEN] TinyLlama returned empty string.")
-            return answer
+                return answer
         except asyncio.TimeoutError:
-            logger.error("[GEN] TinyLlama timed out after %ds.", GEN_TIMEOUT_S)
-            return ""
+            logger.error("[GEN] Local TinyLlama timed out after %ds.", GEN_TIMEOUT_S)
         except Exception as e:
-            logger.error("[GEN] TinyLlama error: %s", e)
-            return ""
-
-    async def _try_groq() -> str:
-        if not GROQ_API_KEY:
-            logger.warning("[GEN] Groq requested but GROQ_API_KEY is not set.")
-            return ""
-        logger.info("[GEN] Using Groq (%s).", GROQ_FALLBACK_MODEL)
-        return await _generate_groq(query, context, lang)
-
-    if GEN_PREFER_GROQ:
-        answer = await _try_groq()
-        if answer:
-            return answer
-        answer = await _try_local()
-        if answer:
-            return answer
+            logger.error("[GEN] Local TinyLlama error: %s", e)
     else:
-        answer = await _try_local()
-        if answer:
-            return answer
-        answer = await _try_groq()
-        if answer:
-            return answer
+        logger.warning("[GEN] Local model not loaded and HF API unavailable.")
 
+   
     logger.error("[GEN] All backends failed — returning static fallback.")
     return _context_fallback(lang)
 
+
 # MODEL LOADING
+
 def _load_gen_model():
-    """
-    Load TinyLlama/TinyLlama-1.1B-Chat-v1.0.
-    Returns (model, tokenizer) or (None, None) on failure.
-    """
     try:
         import torch
         from transformers import AutoTokenizer, AutoModelForCausalLM
 
-        logger.info("[GEN] Loading local SLM: %s  device=%s  4bit=%s",
+        logger.info("[GEN] Loading TinyLlama: %s  device=%s  4bit=%s",
                     LOCAL_GEN_MODEL, GEN_DEVICE, GEN_LOAD_IN_4BIT)
 
-        torch_dtype = torch.float32 if GEN_DEVICE == "cpu" else torch.float16
-
+        torch_dtype  = torch.float32 if GEN_DEVICE == "cpu" else torch.float16
         model_kwargs: Dict[str, Any] = {
             "torch_dtype":       torch_dtype,
             "trust_remote_code": True,
@@ -1225,7 +1247,6 @@ def _load_gen_model():
                     bnb_4bit_use_double_quant=True,
                     bnb_4bit_quant_type="nf4",
                 )
-                logger.info("[GEN] 4-bit quantization enabled.")
             except ImportError:
                 logger.warning("[GEN] bitsandbytes not installed — skipping 4-bit.")
 
@@ -1240,7 +1261,7 @@ def _load_gen_model():
         return model, tokenizer
 
     except Exception as e:
-        logger.error("[GEN] Could not load local gen model (%s): %s", LOCAL_GEN_MODEL, e)
+        logger.error("[GEN] Could not load TinyLlama (%s): %s", LOCAL_GEN_MODEL, e)
         return None, None
 
 
@@ -1267,7 +1288,9 @@ def _load_retrieval_models():
                 logger.warning("[WARN] Reranker %s unavailable: %s", model_name, e)
     return emb, reranker, reranker_name
 
+
 # BOOT
+
 async def _boot():
     try:
         logger.info("=== BOOT: EWU RAG (local SLM=%s, device=%s) ===", LOCAL_GEN_MODEL, GEN_DEVICE)
@@ -1282,17 +1305,19 @@ async def _boot():
             state.gen_model      = gen_model
             state.gen_tokenizer  = gen_tokenizer
             state.gen_model_name = LOCAL_GEN_MODEL
-            state.gen_mode       = "groq+local" if (GEN_PREFER_GROQ and GROQ_API_KEY) else "local"
-            logger.info("[GEN] TinyLlama loaded. prefer_groq=%s  device=%s  "
+            
+            state.gen_mode       = "hf_api+local" if HF_API_TOKEN else "local"
+            logger.info("[GEN] TinyLlama loaded.  hf_api=%s  device=%s  "
                         "max_new_tokens=%d  timeout=%ds",
-                        GEN_PREFER_GROQ, GEN_DEVICE, GEN_MAX_NEW_TOKENS, GEN_TIMEOUT_S)
-        elif GROQ_API_KEY:
-            state.gen_mode       = "groq"
-            state.gen_model_name = GROQ_FALLBACK_MODEL
-            logger.warning("[GEN] Local model unavailable — Groq-only mode (%s).", GROQ_FALLBACK_MODEL)
+                        bool(HF_API_TOKEN), GEN_DEVICE, GEN_MAX_NEW_TOKENS, GEN_TIMEOUT_S)
+        elif HF_API_TOKEN:
+            # Local model failed to load, but HF API is available
+            state.gen_mode       = "hf_api"
+            state.gen_model_name = LOCAL_GEN_MODEL
+            logger.warning("[GEN] Local model unavailable — HF API-only mode.")
         else:
             state.gen_mode = "none"
-            logger.warning("[GEN] No local model AND no GROQ_API_KEY — answers will be fallback text.")
+            logger.warning("[GEN] No local model AND no HF_API_TOKEN — answers will be fallback text.")
 
         cache_ok = (
             _cache_fresh("documents.pkl")
@@ -1321,7 +1346,7 @@ async def _boot():
         logger.info("Building indexes…")
         await asyncio.to_thread(build_indexes_from_scratch)
         state.ready = True
-        logger.info("EWU RAG stack fully ready.")
+        logger.info("✓ EWU RAG stack fully ready.")
 
     except Exception as e:
         state.error = str(e)
@@ -1340,9 +1365,11 @@ async def lifespan(app: FastAPI):
         except asyncio.CancelledError:
             pass
 
+
 # APP + ENDPOINTS
+
 app = FastAPI(
-    title="EWU RAG Server (TinyLlama-1.1B-Chat local + Groq fallback)",
+    title="EWU RAG Server (TinyLlama-1.1B-Chat)",
     lifespan=lifespan,
 )
 
@@ -1440,16 +1467,14 @@ async def health():
         "gen_mode":                state.gen_mode,
         "gen_model":               state.gen_model_name,
         "gen_device":              GEN_DEVICE,
-        "gen_prefer_groq":         GEN_PREFER_GROQ,
         "gen_max_new_tokens":      GEN_MAX_NEW_TOKENS,
         "gen_timeout_s":           GEN_TIMEOUT_S,
         "local_gen_model":         LOCAL_GEN_MODEL,
+        "hf_api_token_set":        bool(HF_API_TOKEN),
         "embed_model":             EMBED_MODEL,
         "reranker_model":          state.reranker_model_name,
         "primary_reranker_model":  PRIMARY_RERANK_MODEL,
         "fallback_reranker_model": FALLBACK_RERANK_MODEL,
-        "groq_fallback_model":     GROQ_FALLBACK_MODEL,
-        "groq_key_set":            bool(GROQ_API_KEY),
         "faiss":                   state.faiss_index is not None,
         "bm25":                    state.bm25 is not None,
         "reranker":                state.reranker is not None,
